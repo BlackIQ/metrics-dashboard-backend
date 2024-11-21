@@ -13,5 +13,6 @@ import { agent } from "$app/middlewares/index.js";
 const router = express.Router();
 
 router.post("/", agent, Metric.CREATE);
+router.get("/:server", Metric.READ);
 
 export default router;

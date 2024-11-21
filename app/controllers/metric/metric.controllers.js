@@ -10,7 +10,11 @@ export const CREATE = async (req, res) => {
   const { server } = req.headers;
 
   try {
-    const writeAPI = influx.getWriteApi(influxConfig.org, "amir-10", "ns");
+    const writeAPI = influx.getWriteApi(
+      influxConfig.org,
+      influxConfig.bucket,
+      "ns"
+    );
 
     // CPU
     const cpuPoint = new Point("cpu_metrics")
@@ -33,7 +37,7 @@ export const CREATE = async (req, res) => {
     const swapPoint = new Point("swap_metrics")
       .tag("server_id", String(server._id))
       .intField("total", metrics.swap.total)
-      .intField("free", metrics.swap.free !== undefined ? metrics.swap.free : 0)  // Fallback to 0 if undefined or any invalid value
+      .intField("free", metrics.swap.free !== undefined ? metrics.swap.free : 0)
       .intField("used", metrics.swap.used)
       .floatField("percent", metrics.swap.percent)
       .timestamp(new Date());
@@ -95,4 +99,27 @@ export const CREATE = async (req, res) => {
   }
 };
 
-export const READ = async (req, res) => {};
+export const READ = async (req, res) => {
+  const { server } = req.params;
+  const { start = "-1h", end = "now()" } = req.query;
+
+  try {
+    const queryAPI = influx.getQueryApi(influxConfig.org);
+
+    const fluxQuery = `
+      from(bucket: "${influxConfig.bucket}")
+        |> range(start: ${start}, stop: ${end})
+        |> filter(fn: (r) => r._measurement == "system_load_metrics" and r.server_id == "${server}")
+    `;
+
+    const results = await queryAPI.collectRows(fluxQuery);
+
+    console.log(results.length)
+
+    return res
+      .status(200)
+      .send({ message: "Data fetched successfully", results });
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+};
