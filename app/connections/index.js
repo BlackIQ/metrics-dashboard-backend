@@ -6,6 +6,6 @@
 // Like configs, create them in directories and export them here.
 
 import Redis from "$app/connections/redis/redis.connection.js";
-import mongodb from "$app/connections/mongodb/mongodb.connection.js";
+import mongo from "$app/connections/mongo/mongo.connection.js";
 
-export { Redis, mongodb };
+export { Redis, mongo };
