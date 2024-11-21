@@ -12,6 +12,10 @@ export const schemaModel = {
     type: String,
     default: "",
   },
+  accessToken: {
+    type: String,
+    default: "",
+  },
   user: {
     type: mongooseSchema.Types.ObjectId,
     ref: "User",
