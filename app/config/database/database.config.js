@@ -18,5 +18,6 @@ export default {
     url: env.INFLUX_URL,
     token: env.INFLUX_TOKEN,
     org: env.INFLUX_ORG,
+    bucket: env.INFLUX_BUCKET,
   },
 };
