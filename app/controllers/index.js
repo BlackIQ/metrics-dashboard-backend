@@ -3,5 +3,6 @@ import * as Permission from "$app/controllers/permission/permission.controllers.
 import * as Role from "$app/controllers/role/role.controllers.js";
 import * as User from "$app/controllers/user/user.controllers.js";
 import * as Server from "$app/controllers/server/server.controllers.js";
+import * as Metric from "$app/controllers/metric/metric.controllers.js";
 
-export { Auth, Permission, Role, User, Server };
+export { Auth, Permission, Role, User, Server, Metric };
