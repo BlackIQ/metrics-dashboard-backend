@@ -109,7 +109,10 @@ export const READ = async (req, res) => {
     const fluxQuery = `
       from(bucket: "${influxConfig.bucket}")
         |> range(start: ${start}, stop: ${end})
-        |> filter(fn: (r) => r._measurement == "system_load_metrics" and r.server_id == "${server}")
+        |> filter(fn: (r) => 
+          (r._measurement == "system_load_metrics" or r._measurement == "cpu_metrics") 
+          and r.server_id == "${server}"
+        )
     `;
 
     const results = await queryAPI.collectRows(fluxQuery);
