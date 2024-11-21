@@ -1,11 +1,14 @@
 import { Server } from "$app/models/index.js";
+import { ray } from "$app/functions/index.js";
 
 export const CREATE = async (req, res) => {
   const data = req.body;
-  const { uid } = req.headers;
+  const { uid: user } = req.headers;
+
+  const accessToken = ray.gen(25);
 
   try {
-    const server = await Server.create({ ...data, user: uid });
+    const server = await Server.create({ ...data, user, accessToken });
 
     return res.status(200).send({ message: "Server created", server });
   } catch (error) {
