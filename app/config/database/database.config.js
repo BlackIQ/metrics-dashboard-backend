@@ -13,5 +13,11 @@ export default {
   },
   redis: {
     connection: env.REDIS_CONNNECTION_STRING,
-  }
+  },
+  influx: {
+    url: env.INFLUX_URL,
+    token: env.INFLUX_TOKEN,
+    org: env.INFLUX_ORG,
+    bucket: env.INFLUX_BUCKET,
+  },
 };
