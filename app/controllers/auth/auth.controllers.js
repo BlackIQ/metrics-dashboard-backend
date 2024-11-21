@@ -4,10 +4,10 @@ import { User } from "$app/models/index.js";
 import md5 from "md5";
 
 export const LOGIN = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ username, password: md5(password) });
+    const user = await User.findOne({ email, password: md5(password) });
 
     if (!user) {
       return res.status(401).send({ message: "User not found" });
@@ -27,10 +27,10 @@ export const REGISTER = async (req, res) => {
   const data = req.body;
 
   try {
-    const user = await User.findOne({ username: data.username });
+    const user = await User.findOne({ email: data.email });
 
     if (user) {
-      return res.status(401).send({ message: "username already exists" });
+      return res.status(401).send({ message: "email already exists" });
     }
 
     data.password = md5(data.password);
