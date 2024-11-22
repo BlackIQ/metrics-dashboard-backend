@@ -7,7 +7,7 @@ const { influx: influxConfig } = databaseConfig;
 
 export const CREATE = async (req, res) => {
   const metrics = req.body;
-  const { server } = req.headers;
+  const { host } = req.headers;
 
   try {
     const writeAPI = influx.getWriteApi(
@@ -18,7 +18,7 @@ export const CREATE = async (req, res) => {
 
     // CPU
     const cpuPoint = new Point("cpu_metrics")
-      .tag("server_id", String(server._id))
+      .tag("host_id", String(host._id))
       .intField("total_cores", metrics.cpu.total_cores)
       .floatField("total_usage", metrics.cpu.total_usage)
       .floatField("frequency_mhz", metrics.cpu.frequency_mhz)
@@ -26,7 +26,7 @@ export const CREATE = async (req, res) => {
 
     // Memory
     const memoryPoint = new Point("memory_metrics")
-      .tag("server_id", String(server._id))
+      .tag("host_id", String(host._id))
       .intField("total", metrics.memory.total)
       .intField("available", metrics.memory.available)
       .intField("used", metrics.memory.used)
@@ -35,7 +35,7 @@ export const CREATE = async (req, res) => {
 
     // Swap
     const swapPoint = new Point("swap_metrics")
-      .tag("server_id", String(server._id))
+      .tag("host_id", String(host._id))
       .intField("total", metrics.swap.total)
       .intField("free", metrics.swap.free !== undefined ? metrics.swap.free : 0)
       .intField("used", metrics.swap.used)
@@ -44,7 +44,7 @@ export const CREATE = async (req, res) => {
 
     // Disk I/O
     const diskIOPoint = new Point("disk_io_metrics")
-      .tag("server_id", String(server._id))
+      .tag("host_id", String(host._id))
       .intField("read_bytes", metrics.disk_io.read_bytes)
       .intField("write_bytes", metrics.disk_io.write_bytes)
       .intField("read_count", metrics.disk_io.read_count)
@@ -53,7 +53,7 @@ export const CREATE = async (req, res) => {
 
     // Network RX/TX
     const networkRTPoint = new Point("network_io_metrics")
-      .tag("server_id", String(server._id))
+      .tag("host_id", String(host._id))
       .intField("bytes_sent", metrics.network_io.bytes_sent)
       .intField("bytes_received", metrics.network_io.bytes_received)
       .intField("packets_sent", metrics.network_io.packets_sent)
@@ -62,7 +62,7 @@ export const CREATE = async (req, res) => {
 
     // System Load
     const systemLoadPoint = new Point("system_load_metrics")
-      .tag("server_id", String(server._id))
+      .tag("host_id", String(host._id))
       .floatField("1_min", metrics.system_load["1_min"])
       .floatField("5_min", metrics.system_load["5_min"])
       .floatField("15_min", metrics.system_load["15_min"])
@@ -71,7 +71,7 @@ export const CREATE = async (req, res) => {
     // Disk Space (for each disk)
     const diskPoints = Object.entries(metrics.disk_space).map(([disk, data]) =>
       new Point("disk_space_metrics")
-        .tag("server_id", String(server._id))
+        .tag("host_id", String(host._id))
         .tag("disk", disk)
         .intField("total", data.total)
         .intField("used", data.used)
@@ -100,7 +100,7 @@ export const CREATE = async (req, res) => {
 };
 
 export const READ = async (req, res) => {
-  const { server } = req.params;
+  const { host } = req.params;
   const { start = "-1h", end = "now()" } = req.query;
 
   try {
@@ -111,7 +111,7 @@ export const READ = async (req, res) => {
         |> range(start: ${start}, stop: ${end})
         |> filter(fn: (r) => 
           (r._measurement == "system_load_metrics" or r._measurement == "cpu_metrics") 
-          and r.server_id == "${server}"
+          and r.host_id == "${host}"
         )
     `;
 

@@ -25,4 +25,4 @@ export const schemaModel = {
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
 
-export default mongo.model("Server", schema);
+export default mongo.model("Host", schema);

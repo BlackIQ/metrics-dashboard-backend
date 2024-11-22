@@ -3,40 +3,40 @@
 // agent.middleware.js
 // ----------------------------------------------
 // Agent Access Middleware.
-// Check the server ID with access token
+// Check the Host ID with access token
 
-import { Server } from "$app/models/index.js";
+import { Host } from "$app/models/index.js";
 
 const agentAccess = async (req, res, next) => {
   // ----------------------------------------------
   // agentAccess()
   // ----------------------------------------------
   // Check headers
-  // Find server
+  // Find host
   // Compair data
 
-  const { accesstoken, serverid } = req.headers;
+  const { accesstoken, hostid } = req.headers;
 
   if (!accesstoken) {
     return res.status(401).send({ message: "Not valid access token" });
   }
 
-  if (!serverid) {
-    return res.status(401).send({ message: "Not valid server id" });
+  if (!hostid) {
+    return res.status(401).send({ message: "Not valid host id" });
   }
 
   try {
-    const server = await Server.findOne({ _id: serverid });
+    const host = await Host.findOne({ _id: hostid });
 
-    if (!server) {
-      return res.status(401).send({ message: "Server is not valid" });
+    if (!host) {
+      return res.status(401).send({ message: "Host is not valid" });
     }
 
-    if (accesstoken !== server.accessToken) {
+    if (accesstoken !== host.accessToken) {
       return res.status(401).send({ message: "Wrong Token" });
     }
 
-    req.headers.server = server;
+    req.headers.host = host;
 
     next();
   } catch (error) {

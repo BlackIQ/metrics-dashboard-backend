@@ -11,7 +11,7 @@ import Auth from "$app/routes/auth/auth.routes.js";
 import Permission from "$app/routes/permission/permission.routes.js";
 import Role from "$app/routes/role/role.routes.js";
 import User from "$app/routes/user/user.routes.js";
-import Server from "$app/routes/server/server.routes.js";
+import Host from "$app/routes/host/host.routes.js";
 import Metric from "$app/routes/metric/metric.routes.js";
 
 import { jwt } from "$app/middlewares/index.js";
@@ -22,7 +22,7 @@ router.use("/auth", Auth);
 router.use("/permissions", jwt, Permission);
 router.use("/roles", jwt, Role);
 router.use("/users", jwt, User);
-router.use("/servers", jwt, Server);
+router.use("/hosts", jwt, Host);
 router.use("/metrics", Metric);
 
 export default router;
