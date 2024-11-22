@@ -4,5 +4,7 @@ import * as Role from "$app/controllers/role/role.controllers.js";
 import * as User from "$app/controllers/user/user.controllers.js";
 import * as Host from "$app/controllers/host/host.controllers.js";
 import * as Metric from "$app/controllers/metric/metric.controllers.js";
+import * as Tag from "$app/controllers/tag/tag.controllers.js";
+import * as Group from "$app/controllers/group/group.controllers.js";
 
-export { Auth, Permission, Role, User, Host, Metric };
+export { Auth, Permission, Role, User, Host, Metric, Tag, Group };
