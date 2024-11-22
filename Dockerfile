@@ -8,6 +8,8 @@ COPY . .
 
 RUN npm install
 
+RUN mv .env.local .env
+
 EXPOSE 8000
 
 CMD ["npm", "start"]
