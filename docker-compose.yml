@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:latest
+    container_name: monitoring-redis
+    restart: always
+    ports:
+      - "7963:6379"
+    volumes:
+      - monitoring-redis:/data
+    networks:
+      - monitoring-network
+    # environment:
+    #   - REDIS_PASSWORD=12420213
+    # command: ["redis-server", "--requirepass", "12420213"]
+
+  mongo:
+    image: mongo:latest
+    container_name: monitoring-mongo
+    restart: always
+    ports:
+      - "17027:27017"
+    volumes:
+      - monitoring-mongo:/data/db
+    networks:
+      - monitoring-network
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=12420213
+
+  influx:
+    image: influxdb:latest
+    container_name: monitoring-influx
+    restart: always
+    ports:
+      - "8680:8086"
+    volumes:
+      - monitoring-influx:/var/lib/influxdb2
+    networks:
+      - monitoring-network
+    environment:
+      - INFLUXDB_ADMIN_USER=amir
+      - INFLUXDB_ADMIN_PASSWORD=amir200300
+      - INFLUXDB_TOKEN=amiramir8282
+
+volumes:
+  monitoring-redis:
+    external: true
+  monitoring-mongo:
+    external: true
+  monitoring-influx:
+    external: true
+
+networks:
+  monitoring-network:
+    external: true
