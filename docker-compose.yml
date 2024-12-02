@@ -5,8 +5,8 @@ services:
     image: redis:latest
     container_name: monitoring-redis
     restart: always
-    ports:
-      - "7963:6379"
+    # ports:
+    #   - "7963:6379"
     volumes:
       - monitoring-redis:/data
     networks:
@@ -19,8 +19,8 @@ services:
     image: mongo:latest
     container_name: monitoring-mongo
     restart: always
-    ports:
-      - "17027:27017"
+    # ports:
+    #   - "17027:27017"
     volumes:
       - monitoring-mongo:/data/db
     networks:
@@ -33,8 +33,8 @@ services:
     image: influxdb:latest
     container_name: monitoring-influx
     restart: always
-    ports:
-      - "8680:8086"
+    # ports:
+    #   - "8680:8086"
     volumes:
       - monitoring-influx-data:/var/lib/influxdb2
       - monitoring-influx-config:/etc/influxdb2
@@ -46,7 +46,7 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=amir200300
       - DOCKER_INFLUXDB_INIT_ORG=BlackIQ
       - DOCKER_INFLUXDB_INIT_BUCKET=monitoring
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=this-is-a-fucking-super-adv-secret-token-bitch
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="LSpqCT2S7-7glSIxzM_4rYuDEuzxka_U8UPJ7vXcaqa-Yv_6Bn_uXW2V-l-oSuZ8c0MJflBVOihJdIjX2j1sow=="
 
   app:
     build:
