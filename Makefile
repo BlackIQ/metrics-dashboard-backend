@@ -1,44 +1,37 @@
-# Variables
-TAG ?= latest
-NAME = monitoring-api
-NETWORK = monitoring-network
-PORT = 9999
-INTERNAL_PORT = 8000
-
 # Default target
 .PHONY: all
 all: build deploy
 
-# Build the Docker image
+# Build the Docker images
 .PHONY: build
 build:
-	@echo "Building Docker image with tag: $(TAG)"
-	docker build -t $(NAME):$(TAG) .
+	@echo "Building Docker images"
+	docker-compose build
 
-# Run the container
+# Run the container using docker-compose
 .PHONY: deploy
-deploy: stop
-	@echo "Deploying Docker container with tag: $(TAG)"
-	docker run --network $(NETWORK) -p $(PORT):$(INTERNAL_PORT) --name $(NAME) --detach $(NAME):$(TAG)
+deploy:
+	@echo "Deploying all containers with docker-compose"
+	docker-compose up -d
 
-# Stop and remove the container if it's running
+# Stop and remove all containers
 .PHONY: stop
 stop:
-	@echo "Stopping and removing any running container named: $(NAME)"
-	-docker rm -f $(NAME)
+	@echo "Stopping and removing all containers"
+	docker-compose down
 
-# Clean up (remove the image)
+# Clean up (remove the images)
 .PHONY: clean
 clean: stop
-	@echo "Removing Docker image with tag: $(TAG)"
-	-docker rmi $(NAME):$(TAG)
+	@echo "Removing Docker images with tag: $(TAG)"
+	docker-compose down --rmi all
 
 # Show usage
 .PHONY: help
 help:
 	@echo "Available commands:"
-	@echo "  make build        Build the Docker image (default tag: latest)"
-	@echo "  make deploy       Deploy the container (default tag: latest)"
-	@echo "  make stop         Stop and remove the container"
-	@echo "  make clean        Stop the container and remove the image"
+	@echo "  make build        Build the Docker images"
+	@echo "  make deploy       Deploy all containers using docker-compose"
+	@echo "  make stop         Stop and remove all containers"
+	@echo "  make clean        Stop the containers, remove images"
 	@echo "  make help         Show this help message"
