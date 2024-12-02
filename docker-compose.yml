@@ -44,6 +44,23 @@ services:
       - INFLUXDB_ADMIN_PASSWORD=amir200300
       - INFLUXDB_TOKEN=amiramir8282
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monitoring-app
+    restart: always
+    ports:
+      - "9999:8000"
+    networks:
+      - monitoring-network
+    depends_on:
+      - redis
+      - mongo
+      - influx
+    env_file:
+      - .env.local
+
 volumes:
   monitoring-redis:
     external: true
