@@ -5,7 +5,7 @@ import { databaseConfig } from "$app/config/index.js";
 
 const { influx: influxConfig } = databaseConfig;
 
-export const CREATE = async (req, res) => {
+export const PULL = async (req, res) => {
   const metrics = req.body;
   const { host } = req.headers;
 
