@@ -5,10 +5,8 @@ export const CREATE = async (req, res) => {
   const data = req.body;
   const { uid: user } = req.headers;
 
-  const accessToken = ray.gen(25);
-
   try {
-    const host = await Host.create({ ...data, user, accessToken });
+    const host = await Host.create({ ...data, user });
 
     return res.status(200).send({ message: "Host created", host });
   } catch (error) {
