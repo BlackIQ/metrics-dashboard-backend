@@ -12,9 +12,21 @@ export const schemaModel = {
     type: String,
     default: "",
   },
-  accessToken: {
+  ip: {
     type: String,
     default: "",
+  },
+  dns: {
+    type: String,
+    default: "",
+  },
+  port: {
+    type: String,
+    default: "",
+  },
+  ipCommunication: {
+    type: Boolean,
+    default: true,
   },
   user: {
     type: mongooseSchema.Types.ObjectId,
