@@ -7,6 +7,5 @@
 
 import jwt from "$app/middlewares/jwt/jwt.middleware.js";
 import key from "$app/middlewares/key/key.middleware.js";
-import agent from "$app/middlewares/agent/agent.middleware.js";
 
-export { key, jwt, agent };
+export { key, jwt };
