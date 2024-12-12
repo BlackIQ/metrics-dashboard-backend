@@ -1,5 +1,4 @@
 import { Host } from "$app/models/index.js";
-import { ray } from "$app/functions/index.js";
 
 export const CREATE = async (req, res) => {
   const data = req.body;
