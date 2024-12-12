@@ -8,11 +8,10 @@
 import express from "express";
 
 import { Metric } from "$app/controllers/index.js";
-import { agent } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.post("/", agent, Metric.CREATE);
+router.post("/", Metric.PULL);
 router.get("/:host", Metric.READ);
 
 export default router;
