@@ -21,12 +21,12 @@ import { jwt } from "$app/middlewares/index.js";
 const router = express.Router();
 
 router.use("/auth", Auth);
-router.use("/metrics", Metric);
 router.use("/permissions", jwt, Permission);
+router.use("/metrics", jwt, Metric);
+router.use("/groups", jwt, Group);
 router.use("/roles", jwt, Role);
 router.use("/users", jwt, User);
 router.use("/hosts", jwt, Host);
 router.use("/tags", jwt, Tag);
-router.use("/groups", jwt, Group);
 
 export default router;
