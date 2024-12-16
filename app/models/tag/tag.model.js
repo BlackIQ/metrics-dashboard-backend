@@ -12,6 +12,11 @@ export const schemaModel = {
     type: String,
     default: "",
   },
+  user: {
+    type: mongooseSchema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
 };
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
