@@ -12,10 +12,10 @@ const { influx: influxConfig } = databaseConfig;
 
 export const pullMetrics = async () => {
   try {
-    const hosts = await Host.find({ isEnable: true });
+    const hosts = await Host.find({ isActive: true });
 
     if (hosts.length === 0) {
-      console.log("No enable hosts found");
+      console.log("No active hosts found");
       return;
     }
 

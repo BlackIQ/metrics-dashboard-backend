@@ -32,7 +32,7 @@ export const schemaModel = {
     type: Boolean,
     default: null,
   },
-  isEnable: {
+  isActive: {
     type: Boolean,
     default: true,
   },
