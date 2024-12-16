@@ -31,7 +31,7 @@ export const SINGLE = async (req, res) => {
 
 export const ALL = async (req, res) => {
   try {
-    const hosts = await Host.find();
+    const hosts = await Host.find().populate("user");
 
     return res.status(200).send({ message: "Data fetched", hosts });
   } catch (error) {
