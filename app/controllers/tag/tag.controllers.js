@@ -1,11 +1,14 @@
 import { Tag } from "$app/models/index.js";
+import { ray } from "$app/functions/index.js";
 
 export const CREATE = async (req, res) => {
   const data = req.body;
   const { uid: user } = req.headers;
 
+  const value = ray.gen(20);
+
   try {
-    const tag = await Tag.create({ ...data, user });
+    const tag = await Tag.create({ ...data, user, value });
 
     return res.status(200).send({ message: "Tag created", tag });
   } catch (error) {
@@ -30,8 +33,10 @@ export const SINGLE = async (req, res) => {
 };
 
 export const ALL = async (req, res) => {
+  const filter = req.query;
+
   try {
-    const tags = await Tag.find();
+    const tags = await Tag.find(filter).populate("user");
 
     return res.status(200).send({ message: "Data fetched", tags });
   } catch (error) {

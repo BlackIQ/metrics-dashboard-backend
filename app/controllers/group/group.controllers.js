@@ -1,11 +1,14 @@
 import { Group } from "$app/models/index.js";
+import { ray } from "$app/functions/index.js";
 
 export const CREATE = async (req, res) => {
   const data = req.body;
   const { uid: user } = req.headers;
 
+  const value = ray.gen(20);
+
   try {
-    const group = await Group.create({ ...data, user });
+    const group = await Group.create({ ...data, user, value });
 
     return res.status(200).send({ message: "Group created", group });
   } catch (error) {
@@ -30,8 +33,10 @@ export const SINGLE = async (req, res) => {
 };
 
 export const ALL = async (req, res) => {
+  const filter = req.query;
+
   try {
-    const groups = await Group.find();
+    const groups = await Group.find(filter).populate("user");
 
     return res.status(200).send({ message: "Data fetched", groups });
   } catch (error) {

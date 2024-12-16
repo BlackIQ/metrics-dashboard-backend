@@ -1,10 +1,13 @@
 import { Permission } from "$app/models/index.js";
+import { ray } from "$app/functions/index.js";
 
 export const CREATE = async (req, res) => {
   const data = req.body;
 
+  const value = ray.gen(20);
+
   try {
-    const permission = await Permission.create(data);
+    const permission = await Permission.create({ ...data, value });
 
     return res.status(200).send({ message: "Permission created", permission });
   } catch (error) {
