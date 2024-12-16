@@ -28,6 +28,10 @@ export const schemaModel = {
     type: Boolean,
     default: true,
   },
+  agentAvailable: {
+    type: Boolean,
+    default: true,
+  },
   user: {
     type: mongooseSchema.Types.ObjectId,
     ref: "User",
