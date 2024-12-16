@@ -30,6 +30,10 @@ export const schemaModel = {
   },
   agentAvailable: {
     type: Boolean,
+    default: null,
+  },
+  isEnable: {
+    type: Boolean,
     default: true,
   },
   user: {
