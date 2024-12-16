@@ -1,5 +1,5 @@
 import { createToken } from "$app/functions/index.js";
-import { User } from "$app/models/index.js";
+import { User, Role } from "$app/models/index.js";
 
 import md5 from "md5";
 
@@ -33,7 +33,10 @@ export const REGISTER = async (req, res) => {
       return res.status(401).send({ message: "email already exists" });
     }
 
+    const userRole = await Role.findOne({ value: "user" });
+
     data.password = md5(data.password);
+    data.role = data.role || userRole._id;
 
     const nUser = await User.create(data);
 
