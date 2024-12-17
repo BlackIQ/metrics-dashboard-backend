@@ -51,7 +51,7 @@ export const schemaModel = {
   tags: [
     {
       type: mongooseSchema.Types.ObjectId,
-      ref: "Tags",
+      ref: "Tag",
       default: [],
     },
   ],

@@ -33,7 +33,10 @@ export const ALL = async (req, res) => {
   const filter = req.query;
 
   try {
-    const hosts = await Host.find(filter).populate("user");
+    const hosts = await Host.find(filter)
+      .populate("user")
+      .populate("groups")
+      .populate("tags");
 
     return res.status(200).send({ message: "Data fetched", hosts });
   } catch (error) {
