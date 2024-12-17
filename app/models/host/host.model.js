@@ -41,6 +41,20 @@ export const schemaModel = {
     ref: "User",
     default: null,
   },
+  groups: [
+    {
+      type: mongooseSchema.Types.ObjectId,
+      ref: "Group",
+      default: [],
+    },
+  ],
+  tags: [
+    {
+      type: mongooseSchema.Types.ObjectId,
+      ref: "Tags",
+      default: [],
+    },
+  ],
 };
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
