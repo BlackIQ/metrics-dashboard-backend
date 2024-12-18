@@ -46,14 +46,74 @@ export const pullMetrics = async () => {
           );
         }
 
+        const { data } = await axios.get(`${hostBaseUrl}/api/metrics`);
+
+        const metrics = data.metrics;
+
+        // CPU
+        const cpuPoint = new Point("cpu_metrics")
+          .tag("host_id", String(host._id))
+          .intField("total_cores", metrics.cpu.total_cores)
+          .floatField("total_usage", metrics.cpu.total_usage)
+          .floatField("frequency_mhz", metrics.cpu.frequency_mhz)
+          .timestamp(new Date());
+
+        // Memory
+        const memoryPoint = new Point("memory_metrics")
+          .tag("host_id", String(host._id))
+          .intField("total", metrics.memory.total)
+          .intField("available", metrics.memory.available)
+          .intField("used", metrics.memory.used)
+          .floatField("percent", metrics.memory.percent)
+          .timestamp(new Date());
+
+        // Swap
+        const swapPoint = new Point("swap_metrics")
+          .tag("host_id", String(host._id))
+          .intField("total", metrics.swap.total)
+          .intField("free", metrics.swap.free ?? 0)
+          .intField("used", metrics.swap.used)
+          .floatField("percent", metrics.swap.percent)
+          .timestamp(new Date());
+
+        // Disk I/O
+        const diskIOPoint = new Point("disk_io_metrics")
+          .tag("host_id", String(host._id))
+          .intField("read_bytes", metrics.disk_io.read_bytes)
+          .intField("write_bytes", metrics.disk_io.write_bytes)
+          .intField("read_count", metrics.disk_io.read_count)
+          .intField("write_count", metrics.disk_io.write_count)
+          .timestamp(new Date());
+
+        // Network RX/TX
+        const networkRTPoint = new Point("network_io_metrics")
+          .tag("host_id", String(host._id))
+          .intField("bytes_sent", metrics.network_io.bytes_sent)
+          .intField("bytes_received", metrics.network_io.bytes_received)
+          .intField("packets_sent", metrics.network_io.packets_sent)
+          .intField("packets_received", metrics.network_io.packets_received)
+          .timestamp(new Date());
+
+        const systemLoadPoint = new Point("system_load_metrics")
+          .tag("host_id", String(host._id))
+          .floatField("1_min", metrics.system_load["1_min"])
+          .floatField("5_min", metrics.system_load["5_min"])
+          .floatField("15_min", metrics.system_load["15_min"])
+          .timestamp(new Date());
+
+        // Write all points
+        writeAPI.writePoint(cpuPoint);
+        writeAPI.writePoint(memoryPoint);
+        writeAPI.writePoint(swapPoint);
+        writeAPI.writePoint(diskIOPoint);
+        writeAPI.writePoint(networkRTPoint);
+        writeAPI.writePoint(systemLoadPoint);
+
         const now = new Date().toISOString();
+
         console.log(
           chalk.green(`[${now}] Metrics successfully fetched from ${host.name}`)
         );
-
-        // Fetch and process metrics (if needed)
-        // const { data: metrics } = await axios.get(`${hostBaseUrl}/api/metrics`);
-        // Process and write metrics to InfluxDB...
       } catch (error) {
         const now = new Date().toISOString();
 
