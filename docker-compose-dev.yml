@@ -8,18 +8,12 @@ services:
     ports:
       - "8086:8086"
     volumes:
-      - dev-monitoring-influx-data:/var/lib/influxdb2
-      - dev-monitoring-influx-config:/etc/influxdb2
+      - ./influx/data:/var/lib/influxdb2
+      - ./influx/config:/etc/influxdb2
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=amir
       - DOCKER_INFLUXDB_INIT_PASSWORD=amir200300
       - DOCKER_INFLUXDB_INIT_ORG=BlackIQ
       - DOCKER_INFLUXDB_INIT_BUCKET=monitoring
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="LSpqCT2S7-7glSIxzM_4rYuDEuzxka_U8UPJ7vXcaqa-Yv_6Bn_uXW2V-l-oSuZ8c0MJflBVOihJdIjX2j1sow=="
-
-volumes:
-  dev-monitoring-influx-config:
-    external: true
-  dev-monitoring-influx-data:
-    external: true
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="N6oPPtgisTBUpUmtHd5YcjBh-ac13kxvTbh3T__P_iG89Z3eu3_-QXLVgi9rtu_zlbLW-sXWbQtuiiKAdf2Dog=="
