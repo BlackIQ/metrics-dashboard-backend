@@ -11,6 +11,6 @@ import { Metric } from "$app/controllers/index.js";
 
 const router = express.Router();
 
-router.get("/:host", Metric.READ);
+router.post("/:host", Metric.READ);
 
 export default router;
