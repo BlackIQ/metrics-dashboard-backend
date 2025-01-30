@@ -1,5 +1,7 @@
 import { Host } from "$app/models/index.js";
 
+import axios from "axios";
+
 export const CREATE = async (req, res) => {
   const data = req.body;
   const { uid: user } = req.headers;
@@ -76,6 +78,28 @@ export const DELETE = async (req, res) => {
     }
 
     return res.status(200).send({ message: "Host deleted" });
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+};
+
+export const CHECK = async (req, res) => {
+  const { host } = req.body;
+
+  try {
+    const hostBaseUrl = `http://${host.ipCommunication ? host.ip : host.dns}:${
+      host.port
+    }`;
+
+    const { data: ping } = await axios.get(`${hostBaseUrl}/api/ping`, {
+      timeout: 5000,
+    });
+
+    if (ping.message !== "pong") {
+      throw new Error("Ping response invalid");
+    }
+
+    return res.status(200).send({ message: "Server is ok!" });
   } catch (error) {
     return res.status(500).send({ message: error.message });
   }
