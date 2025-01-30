@@ -123,12 +123,19 @@ export const pullMetrics = async () => {
               pids,
             } = container;
 
+            if (status === "exited") {
+              console.log(
+                chalk.yellow(`[Docker] Skipping exited container: ${name}`)
+              );
+              return; // Skip the container if it's exited
+            }
+
             // CPU Metrics for Docker container
             const cpuPoint = new Point("docker_cpu_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
               .tag("container_name", name)
-              .floatField("cpu_percentage", cpu.cpu_percentage)
+              .floatField("cpu_percentage", parseFloat(cpu.cpu_percentage))
               .intField("cpu_usage", cpu.cpu_usage)
               .timestamp(new Date());
 
