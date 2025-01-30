@@ -46,60 +46,152 @@ export const pullMetrics = async () => {
           );
         }
 
-        const { data } = await axios.get(`${hostBaseUrl}/api/metrics`);
+        const { data: hostData } = await axios.get(
+          `${hostBaseUrl}/api/metrics`
+        );
 
-        const metrics = data.metrics;
+        const hostMetrics = hostData.metrics;
 
         // CPU
-        const cpuPoint = new Point("cpu_metrics")
+        const cpuPoint = new Point("host_cpu_metrics")
           .tag("host_id", String(host._id))
-          .intField("total_cores", metrics.cpu.total_cores)
-          .floatField("total_usage", metrics.cpu.total_usage)
-          .floatField("frequency_mhz", metrics.cpu.frequency_mhz)
+          .intField("total_cores", hostMetrics.cpu.total_cores)
+          .floatField("total_usage", hostMetrics.cpu.total_usage)
+          .floatField("frequency_mhz", hostMetrics.cpu.frequency_mhz)
           .timestamp(new Date());
 
         // Memory
-        const memoryPoint = new Point("memory_metrics")
+        const memoryPoint = new Point("host_memory_metrics")
           .tag("host_id", String(host._id))
-          .intField("total", metrics.memory.total)
-          .intField("available", metrics.memory.available)
-          .intField("used", metrics.memory.used)
-          .floatField("percent", metrics.memory.percent)
+          .intField("total", hostMetrics.memory.total)
+          .intField("available", hostMetrics.memory.available)
+          .intField("used", hostMetrics.memory.used)
+          .floatField("percent", hostMetrics.memory.percent)
           .timestamp(new Date());
 
         // Swap
-        const swapPoint = new Point("swap_metrics")
+        const swapPoint = new Point("host_swap_metrics")
           .tag("host_id", String(host._id))
-          .intField("total", metrics.swap.total)
-          .intField("free", metrics.swap.free ?? 0)
-          .intField("used", metrics.swap.used)
-          .floatField("percent", metrics.swap.percent)
+          .intField("total", hostMetrics.swap.total)
+          .intField("free", hostMetrics.swap.free ?? 0)
+          .intField("used", hostMetrics.swap.used)
+          .floatField("percent", hostMetrics.swap.percent)
           .timestamp(new Date());
 
         // Disk I/O
-        const diskIOPoint = new Point("disk_io_metrics")
+        const diskIOPoint = new Point("host_disk_io_metrics")
           .tag("host_id", String(host._id))
-          .intField("read_bytes", metrics.disk_io.read_bytes)
-          .intField("write_bytes", metrics.disk_io.write_bytes)
-          .intField("read_count", metrics.disk_io.read_count)
-          .intField("write_count", metrics.disk_io.write_count)
+          .intField("read_bytes", hostMetrics.disk_io.read_bytes)
+          .intField("write_bytes", hostMetrics.disk_io.write_bytes)
+          .intField("read_count", hostMetrics.disk_io.read_count)
+          .intField("write_count", hostMetrics.disk_io.write_count)
           .timestamp(new Date());
 
         // Network RX/TX
-        const networkRTPoint = new Point("network_io_metrics")
+        const networkRTPoint = new Point("host_network_io_metrics")
           .tag("host_id", String(host._id))
-          .intField("bytes_sent", metrics.network_io.bytes_sent)
-          .intField("bytes_received", metrics.network_io.bytes_received)
-          .intField("packets_sent", metrics.network_io.packets_sent)
-          .intField("packets_received", metrics.network_io.packets_received)
+          .intField("bytes_sent", hostMetrics.network_io.bytes_sent)
+          .intField("bytes_received", hostMetrics.network_io.bytes_received)
+          .intField("packets_sent", hostMetrics.network_io.packets_sent)
+          .intField("packets_received", hostMetrics.network_io.packets_received)
           .timestamp(new Date());
 
-        const systemLoadPoint = new Point("system_load_metrics")
+        const systemLoadPoint = new Point("host_system_load_metrics")
           .tag("host_id", String(host._id))
-          .floatField("1_min", metrics.system_load["1_min"])
-          .floatField("5_min", metrics.system_load["5_min"])
-          .floatField("15_min", metrics.system_load["15_min"])
+          .floatField("1_min", hostMetrics.system_load["1_min"])
+          .floatField("5_min", hostMetrics.system_load["5_min"])
+          .floatField("15_min", hostMetrics.system_load["15_min"])
           .timestamp(new Date());
+
+        if (host.dockerMetrics) {
+          const { data: dockerData } = await axios.get(
+            `${hostBaseUrl}/api/metrics/docker`
+          );
+
+          const dockerMetrics = dockerData.metrics;
+
+          dockerMetrics.forEach((container) => {
+            const {
+              id,
+              name,
+              cpu,
+              memory,
+              blkio_stats,
+              networks,
+              status,
+              health,
+              pids,
+            } = container;
+
+            // CPU Metrics for Docker container
+            const cpuPoint = new Point("docker_cpu_metrics")
+              .tag("host_id", String(host._id))
+              .tag("container_id", id)
+              .tag("container_name", name)
+              .floatField("cpu_percentage", cpu.cpu_percentage)
+              .intField("cpu_usage", cpu.cpu_usage)
+              .timestamp(new Date());
+
+            // Memory Metrics for Docker container
+            const memoryPoint = new Point("docker_memory_metrics")
+              .tag("host_id", String(host._id))
+              .tag("container_id", id)
+              .tag("container_name", name)
+              .intField("memory_limit", memory.memory_limit)
+              .floatField("memory_percentage", memory.memory_percentage)
+              .intField("memory_usage", memory.memory_usage)
+              .timestamp(new Date());
+
+            // Disk I/O Metrics for Docker container
+            const diskIOPoint = new Point("docker_disk_io_metrics")
+              .tag("host_id", String(host._id))
+              .tag("container_id", id)
+              .tag("container_name", name)
+              .intField("read_bytes", blkio_stats.read_bytes)
+              .intField("write_bytes", blkio_stats.write_bytes)
+              .timestamp(new Date());
+
+            // Network Metrics for Docker container
+            const networkPoint = new Point("docker_network_metrics")
+              .tag("host_id", String(host._id))
+              .tag("container_id", id)
+              .tag("container_name", name)
+              .intField("rx_bytes", networks.eth0.rx_bytes)
+              .intField("tx_bytes", networks.eth0.tx_bytes)
+              .timestamp(new Date());
+
+            // PID Metrics for Docker container
+            const pidPoint = new Point("docker_pid_metrics")
+              .tag("host_id", String(host._id))
+              .tag("container_id", id)
+              .tag("container_name", name)
+              .intField("pids", pids)
+              .timestamp(new Date());
+
+            // Container Health and Status
+            const statusPoint = new Point("docker_container_status")
+              .tag("host_id", String(host._id))
+              .tag("container_id", id)
+              .tag("container_name", name)
+              .stringField("status", status)
+              .stringField("health", health)
+              .timestamp(new Date());
+
+            // Write all Docker container points
+            writeAPI.writePoint(cpuPoint);
+            writeAPI.writePoint(memoryPoint);
+            writeAPI.writePoint(diskIOPoint);
+            writeAPI.writePoint(networkPoint);
+            writeAPI.writePoint(pidPoint);
+            writeAPI.writePoint(statusPoint);
+
+            console.log(
+              chalk.green(
+                `[${new Date().toISOString()}] [Docker] Metrics successfully fetched for ${name}`
+              )
+            );
+          });
+        }
 
         // Write all points
         writeAPI.writePoint(cpuPoint);
@@ -112,7 +204,9 @@ export const pullMetrics = async () => {
         const now = new Date().toISOString();
 
         console.log(
-          chalk.green(`[${now}] Metrics successfully fetched from ${host.name}`)
+          chalk.green(
+            `[${now}] [Host] Metrics successfully fetched from ${host.name}`
+          )
         );
       } catch (error) {
         const now = new Date().toISOString();
