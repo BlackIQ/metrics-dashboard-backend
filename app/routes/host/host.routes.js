@@ -16,5 +16,6 @@ router.post("/", Host.CREATE);
 router.get("/:id", Host.SINGLE);
 router.delete("/:id", Host.DELETE);
 router.patch("/:id", Host.UPDATE);
+router.post("/check", Host.CHECK);
 
 export default router;
