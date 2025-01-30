@@ -32,6 +32,10 @@ export const schemaModel = {
     type: Boolean,
     default: null,
   },
+  dockerMetrics: {
+    type: Boolean,
+    default: false,
+  },
   isActive: {
     type: Boolean,
     default: true,
