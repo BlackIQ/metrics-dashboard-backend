@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:latest
+    container_name: openhubble-redis
+    restart: always
+    ports:
+      - "1001:6379"
+    volumes:
+      - ohc-test-redis-data:/data
+    networks:
+      - ohc-test-network
+    # environment:
+    #   - REDIS_PASSWORD=12420213
+    # command: ["redis-server", "--requirepass", "12420213"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongo:
+    image: mongo:latest
+    container_name: openhubble-mongo
+    restart: always
+    ports:
+      - "1002:27017"
+    volumes:
+      - ohc-test-mongo-data:/data/db
+      - ohc-test-mongo-config:/data/configdb
+    networks:
+      - ohc-test-network
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=12420213
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  influx:
+    image: influxdb:latest
+    container_name: openhubble-influx
+    restart: always
+    ports:
+      - "1003:8086"
+    volumes:
+      - ohc-test-influx-data:/var/lib/influxdb2
+      - ohc-test-influx-config:/etc/influxdb2
+    networks:
+      - ohc-test-network
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=amir
+      - DOCKER_INFLUXDB_INIT_PASSWORD=amir200300
+      - DOCKER_INFLUXDB_INIT_ORG=BlackIQ
+      - DOCKER_INFLUXDB_INIT_BUCKET=monitoring
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="LSpqCT2S7-7glSIxzM_4rYuDEuzxka_U8UPJ7vXcaqa-Yv_6Bn_uXW2V-l-oSuZ8c0MJflBVOihJdIjX2j1sow=="
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ohc-test-redis-data:
+  ohc-test-mongo-data:
+  ohc-test-mongo-config:
+  ohc-test-influx-data:
+  ohc-test-influx-config:
+
+networks:
+  ohc-test-network:
