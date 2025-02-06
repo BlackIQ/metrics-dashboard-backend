@@ -15,6 +15,7 @@ import Host from "$app/routes/host/host.routes.js";
 import Metric from "$app/routes/metric/metric.routes.js";
 import Tag from "$app/routes/tag/tag.routes.js";
 import Group from "$app/routes/group/group.routes.js";
+import Ping from "$app/routes/ping/ping.routes.js";
 
 import { jwt } from "$app/middlewares/index.js";
 
@@ -28,5 +29,6 @@ router.use("/roles", jwt, Role);
 router.use("/users", jwt, User);
 router.use("/hosts", jwt, Host);
 router.use("/tags", jwt, Tag);
+router.use("/ping", Ping);
 
 export default router;
