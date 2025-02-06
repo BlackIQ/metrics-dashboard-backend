@@ -1,6 +1,9 @@
 # Use the Node base image as the build stage
 FROM node:alpine AS build
 
+# Install cURL
+RUN apk add curl
+
 # Set the working directory in the container
 WORKDIR /app
 
