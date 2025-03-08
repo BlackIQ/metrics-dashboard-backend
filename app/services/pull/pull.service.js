@@ -33,6 +33,9 @@ export const pullMetrics = async () => {
       try {
         const { data: ping } = await axios.get(`${hostBaseUrl}/api/ping`, {
           timeout: 5000,
+          headers: {
+            "x-api-key": host.apiKey,
+          },
         });
 
         if (ping.message !== "pong") {
@@ -47,7 +50,13 @@ export const pullMetrics = async () => {
         }
 
         const { data: hostData } = await axios.get(
-          `${hostBaseUrl}/api/metrics`
+          `${hostBaseUrl}/api/metrics`,
+          {
+            timeout: 5000,
+            headers: {
+              "x-api-key": host.apiKey,
+            },
+          }
         );
 
         const hostMetrics = hostData.metrics;
@@ -105,7 +114,12 @@ export const pullMetrics = async () => {
 
         if (host.dockerMetrics) {
           const { data: dockerData } = await axios.get(
-            `${hostBaseUrl}/api/metrics/docker`
+            `${hostBaseUrl}/api/metrics/docker`,
+            {
+              headers: {
+                "x-api-key": host.apiKey,
+              },
+            }
           );
 
           const dockerMetrics = dockerData.metrics;
