@@ -24,6 +24,10 @@ export const schemaModel = {
     type: String,
     default: "",
   },
+  apiKey: {
+    type: String,
+    default: "",
+  },
   ipCommunication: {
     type: Boolean,
     default: true,
