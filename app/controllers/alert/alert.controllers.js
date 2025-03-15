@@ -157,7 +157,7 @@ export const DELETE = async (req, res) => {
 
 const sendTelegramMessage = async (chatID, botToken, message) => {
   const payload = {
-    chat_id: chatID,
+    chat_id: Number(chatID),
     message,
   };
 
