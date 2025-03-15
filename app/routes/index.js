@@ -16,6 +16,7 @@ import Metric from "$app/routes/metric/metric.routes.js";
 import Tag from "$app/routes/tag/tag.routes.js";
 import Group from "$app/routes/group/group.routes.js";
 import Ping from "$app/routes/ping/ping.routes.js";
+import Alert from "$app/routes/alert/alert.routes.js";
 
 import { jwt } from "$app/middlewares/index.js";
 
@@ -25,6 +26,7 @@ router.use("/auth", Auth);
 router.use("/permissions", jwt, Permission);
 router.use("/metrics", jwt, Metric);
 router.use("/groups", jwt, Group);
+router.use("/alerts", jwt, Alert);
 router.use("/roles", jwt, Role);
 router.use("/users", jwt, User);
 router.use("/hosts", jwt, Host);
