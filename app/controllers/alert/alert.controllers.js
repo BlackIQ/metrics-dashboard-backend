@@ -1,5 +1,7 @@
 import { Alert } from "$app/models/index.js";
 
+import axios from "axios";
+
 const baseAlerts = [
   {
     name: "Telegram",
@@ -148,6 +150,81 @@ export const DELETE = async (req, res) => {
     }
 
     return res.status(200).send({ message: "Alert deleted" });
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+};
+
+const sendTelegramMessage = async (chatID, botToken, message) => {
+  const payload = {
+    chat_id: chatID,
+    message,
+  };
+
+  try {
+    const response = await axios.post(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      payload
+    );
+
+    if (!response.data.ok) {
+      throw new Error(`Telegram API error: ${response.data.description}`);
+    }
+
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to send Telegram message: ${error.message}`);
+  }
+};
+
+export const TEST_ALERT = async (req, res) => {
+  const { config, type } = req.body;
+
+  try {
+    if (!type) {
+      return res.status(500).send({ message: "Type is required" });
+    }
+
+    if (type === "telegram") {
+      if (!config.chatID || !config.botToken) {
+        return res
+          .status(400)
+          .send({ message: "chatID and botToken are required for Telegram" });
+      }
+
+      const messages = [
+        "OpenHubble Cloud",
+        "",
+        "This is a test to check setup :)",
+      ];
+
+      try {
+        await sendTelegramMessage(
+          config.chatID,
+          config.botToken,
+          messages.join("\n")
+        );
+        return res
+          .status(200)
+          .send({ message: "Telegram test message sent successfully" });
+      } catch (telegramError) {
+        return res.status(500).send({
+          message: telegramError.message,
+        });
+      }
+    } else if (type === "email") {
+      if (!config.destinationEmail) {
+        return res
+          .status(400)
+          .send({ message: "destinationEmail is required for Email alerts" });
+      }
+
+      return res
+        .status(200)
+        .send({ message: "Email test message sent successfully" });
+    } else {
+      return res.status(500).send({ message: "Type is not found" });
+    }
   } catch (error) {
     return res.status(500).send({ message: error.message });
   }
