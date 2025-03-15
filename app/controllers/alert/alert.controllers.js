@@ -192,10 +192,13 @@ export const TEST_ALERT = async (req, res) => {
           .send({ message: "chatID and botToken are required for Telegram" });
       }
 
+      // "  "
+
       const messages = [
-        "OpenHubble Cloud",
+        "OpenHubble Cloud 🔭",
         "",
-        "This is a test to check setup :)",
+        "Your account is now connected to Telegram.",
+        "Stay tuned for real-time alerts directly here! 🚀",
       ];
 
       try {
