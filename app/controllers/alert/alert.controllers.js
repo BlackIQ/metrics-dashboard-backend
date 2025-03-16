@@ -1,6 +1,5 @@
 import { Alert } from "$app/models/index.js";
-
-import axios from "axios";
+import { sendTelegramMessage, sendEmail } from "$app/utils/index.js";
 
 const baseAlerts = [
   {
@@ -152,28 +151,6 @@ export const DELETE = async (req, res) => {
     return res.status(200).send({ message: "Alert deleted" });
   } catch (error) {
     return res.status(500).send({ message: error.message });
-  }
-};
-
-const sendTelegramMessage = async (chatID, botToken, message) => {
-  const payload = {
-    chat_id: chatID,
-    text: message,
-  };
-
-  try {
-    const response = await axios.post(
-      `https://api.telegram.org/bot${botToken}/sendMessage`,
-      payload
-    );
-
-    if (!response.data.ok) {
-      throw new Error(`Telegram API error: ${response.data.description}`);
-    }
-
-    return response.data;
-  } catch (error) {
-    throw new Error(`Failed to send Telegram message: ${error.message}`);
   }
 };
 
