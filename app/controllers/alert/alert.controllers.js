@@ -199,6 +199,19 @@ export const TEST_ALERT = async (req, res) => {
           .send({ message: "destinationEmail is required for Email alerts" });
       }
 
+      const emailContent = `
+        <p style="font-size: 18px; color: #00FFFF;">OpenHubble Cloud 🔭</p>
+        <p>&nbsp;</p>
+        <p>Your account is now connected to Email.</p>
+        <p>Stay tuned for real-time alerts directly in your inbox! 🚀</p>
+      `;
+
+      await sendEmail(
+        config.destinationEmail,
+        "Welcome to OpenHubble Cloud Alerts",
+        emailContent
+      );
+
       return res
         .status(200)
         .send({ message: "Email test message sent successfully" });
