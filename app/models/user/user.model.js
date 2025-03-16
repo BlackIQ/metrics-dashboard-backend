@@ -24,7 +24,7 @@ export const schemaModel = {
     type: String,
     default: "",
   },
-  isConfiremed: {
+  isConfirmed: {
     type: Boolean,
     default: false,
   },

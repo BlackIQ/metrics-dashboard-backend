@@ -1,6 +1,7 @@
 import { createToken, ray } from "$app/functions/index.js";
 import { User, Role } from "$app/models/index.js";
 import { sendEmail } from "$app/utils/index.js";
+
 import md5 from "md5";
 
 export const LOGIN = async (req, res) => {
@@ -9,7 +10,7 @@ export const LOGIN = async (req, res) => {
   try {
     const user = await User.findOne({ email, password: md5(password) });
 
-    if (!user || !user.isConfiremed) {
+    if (!user || !user.isConfirmed) {
       return res
         .status(401)
         .send({ message: "Invalid credentials or unconfirmed email" });
@@ -40,11 +41,10 @@ export const REGISTER = async (req, res) => {
     data.password = md5(data.password);
     data.role = data.role || userRole._id;
     data.rayid = ray.gen(50);
-    data.isConfiremed = false;
+    data.isConfirmed = false;
 
-    const newUser = await User.create(data);
+    await User.create(data);
 
-    // Send confirmation email
     const confirmEmailContent = (rayid) => `
       <p style="font-size: 18px; color: #00FFFF;">Welcome to OpenHubble Cloud! 🔭</p>
       <p> </p>
@@ -89,10 +89,14 @@ export const CONFIRM = async (req, res) => {
 
     await User.findOneAndUpdate(
       { _id: user._id },
-      { $set: { isConfiremed: true } }
+      { $set: { isConfirmed: true } }
     );
 
-    return res.json({ message: "Email confirmed successfully" });
+    return res.status(200).send({
+      message: "Welcome",
+      token: createToken({ id: user._id }),
+      user: user,
+    });
   } catch (error) {
     return res.status(400).json({ message: "Invalid or expired token" });
   }
