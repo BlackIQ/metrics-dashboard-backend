@@ -1,7 +1,6 @@
 import { createToken, ray } from "$app/functions/index.js";
 import { User, Role } from "$app/models/index.js";
 import { sendEmail } from "$app/utils/index.js";
-
 import md5 from "md5";
 
 export const LOGIN = async (req, res) => {
@@ -92,6 +91,30 @@ export const CONFIRM = async (req, res) => {
     await User.findOneAndUpdate(
       { _id: user._id },
       { $set: { isConfirmed: true } }
+    );
+
+    const welcomeEmailContent = (userEmail) => `
+      <p style="font-size: 18px; color: #00FFFF;">You’re In! Welcome to OpenHubble Cloud! 🔭</p>
+      <p> </p>
+      <p>Congratulations, ${user.firstName}!</p>
+      <p>Your email is confirmed, and the universe of data insights is now at your fingertips.</p>
+      <p> </p>
+      <p>Get ready to explore, analyze, and uncover hidden gems with OpenHubble Cloud.</p>
+      <p style="margin: 20px 0;">
+        <a href="https://cloud.openhubble.com/panel" 
+           style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
+          Dive Into Your Panel
+        </a>
+      </p>
+      <p> </p>
+      <p>Need help? Reach out anytime at <a href="mailto:support@openhubble.com" style="color: #00FFFF;">support@openhubble.com</a>.</p>
+      <p>Let’s make some cosmic discoveries together! 🚀</p>
+    `;
+
+    await sendEmail(
+      user.email,
+      "Welcome to OpenHubble Cloud!",
+      welcomeEmailContent(user.email)
     );
 
     return res.status(200).send({
