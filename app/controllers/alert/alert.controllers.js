@@ -192,8 +192,6 @@ export const TEST_ALERT = async (req, res) => {
           .send({ message: "chatID and botToken are required for Telegram" });
       }
 
-      // "  "
-
       const messages = [
         "OpenHubble Cloud 🔭",
         "",
@@ -215,7 +213,9 @@ export const TEST_ALERT = async (req, res) => {
           message: telegramError.message,
         });
       }
-    } else if (type === "email") {
+    }
+
+    if (type === "email") {
       if (!config.destinationEmail) {
         return res
           .status(400)
@@ -225,9 +225,9 @@ export const TEST_ALERT = async (req, res) => {
       return res
         .status(200)
         .send({ message: "Email test message sent successfully" });
-    } else {
-      return res.status(500).send({ message: "Type is not found" });
     }
+
+    return res.status(500).send({ message: "Type is not found" });
   } catch (error) {
     return res.status(500).send({ message: error.message });
   }
