@@ -13,5 +13,6 @@ const router = express.Router();
 
 router.post("/login", Auth.LOGIN);
 router.post("/register", Auth.REGISTER);
+router.get("/confirm/:rayid", Auth.CONFIRM);
 
 export default router;

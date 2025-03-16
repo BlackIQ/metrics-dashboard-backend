@@ -20,6 +20,14 @@ export const schemaModel = {
     type: String,
     default: "",
   },
+  rayid: {
+    type: String,
+    default: "",
+  },
+  isConfiremed: {
+    type: Boolean,
+    default: false,
+  },
   role: {
     type: mongooseSchema.Types.ObjectId,
     ref: "Role",
