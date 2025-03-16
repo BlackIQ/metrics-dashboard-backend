@@ -48,19 +48,21 @@ export const REGISTER = async (req, res) => {
     const confirmEmailContent = (rayid) => `
       <p style="font-size: 18px; color: #00FFFF;">Welcome to OpenHubble Cloud! 🔭</p>
       <p> </p>
-      <p>You're one step away from exploring data and unveiling insights.</p>
-      <p>Please confirm your email by clicking the link below:</p>
+      <p>You're one step away from diving into your OpenHubble Cloud panel.</p>
+      <p>Click below to confirm your email and get started:</p>
       <p style="margin: 20px 0;">
-        <a href="https://cloud.openhubble.com/api/auth/confirm/${rayid}" 
+        <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
-          Confirm Your Email
+          Confirm & Access Panel
         </a>
       </p>
+      <p> </p>
       <p>If the button doesn’t work, copy and paste this link into your browser:</p>
-      <p><a href="https://cloud.openhubble.com/api/auth/confirm/${rayid}" style="color: #00FFFF; word-break: break-all;">
-        https://cloud.openhubble.com/api/auth/confirm/${rayid}
+      <p><a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+        https://cloud.openhubble.com/auth/confirm?rayid=${rayid}
       </a></p>
-      <p>Happy exploring! 🚀</p>
+      <p> </p>
+      <p>Ready to explore? 🚀</p>
     `;
 
     await sendEmail(
