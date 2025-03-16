@@ -18,29 +18,29 @@ const agentAccess = async (req, res, next) => {
   const { accesstoken, hostid } = req.headers;
 
   if (!accesstoken) {
-    return res.status(401).send({ message: "Not valid access token" });
+    return res.status(401).json({ message: "Not valid access token" });
   }
 
   if (!hostid) {
-    return res.status(401).send({ message: "Not valid host id" });
+    return res.status(401).json({ message: "Not valid host id" });
   }
 
   try {
     const host = await Host.findOne({ _id: hostid });
 
     if (!host) {
-      return res.status(401).send({ message: "Host is not valid" });
+      return res.status(401).json({ message: "Host is not valid" });
     }
 
     if (accesstoken !== host.accessToken) {
-      return res.status(401).send({ message: "Wrong Token" });
+      return res.status(401).json({ message: "Wrong Token" });
     }
 
     req.headers.host = host;
 
     next();
   } catch (error) {
-    return res.status(401).send({ message: error.message });
+    return res.status(401).json({ message: error.message });
   }
 };
 

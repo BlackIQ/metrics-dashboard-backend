@@ -18,11 +18,11 @@ const key = async (req, res, next) => {
   const { apikey } = req.headers;
 
   if (!apikey) {
-    return res.status(401).send({ message: "Unautorized" });
+    return res.status(401).json({ message: "Unautorized" });
   }
 
   if (apikey !== appConfig.key) {
-    return res.status(401).send({ message: "Unautorized" });
+    return res.status(401).json({ message: "Unautorized" });
   }
 
   next();

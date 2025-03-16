@@ -22,7 +22,7 @@ const jwt = async (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization) {
-    return res.status(401).send({ message: "Unauthorization missed" });
+    return res.status(401).json({ message: "Unauthorization missed" });
   }
 
   const token = authorization.split(" ")[1];
@@ -33,14 +33,14 @@ const jwt = async (req, res, next) => {
     const user = await User.findOne({ _id: id });
 
     if (!user) {
-      return res.status(401).send({ message: "Unautorized" });
+      return res.status(401).json({ message: "Unautorized" });
     }
 
     req.headers.uid = id;
 
     next();
   } catch (error) {
-    return res.status(401).send({ message: error.message });
+    return res.status(401).json({ message: error.message });
   }
 };
 

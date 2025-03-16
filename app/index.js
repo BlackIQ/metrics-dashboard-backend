@@ -17,7 +17,7 @@ app.use(morgan("dev"));
 
 app.use("/api", Routes);
 app.use("*", (req, res) =>
-  res.status(404).send({
+  res.status(404).json({
     url: req.originalUrl,
     method: req.method,
     message: "Page not found",
