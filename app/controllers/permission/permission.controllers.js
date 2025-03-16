@@ -6,9 +6,9 @@ export const CREATE = async (req, res) => {
   try {
     const permission = await Permission.create(data);
 
-    return res.status(200).send({ message: "Permission created", permission });
+    return res.status(200).json({ message: "Permission created", permission });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -19,12 +19,12 @@ export const SINGLE = async (req, res) => {
     const permission = await Permission.findOne({ _id: id });
 
     if (!permission) {
-      return res.status(404).send({ message: "Permission did not found" });
+      return res.status(404).json({ message: "Permission did not found" });
     }
 
-    return res.status(200).send({ message: "Permission found", permission });
+    return res.status(200).json({ message: "Permission found", permission });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -32,9 +32,9 @@ export const ALL = async (req, res) => {
   try {
     const permissions = await Permission.find();
 
-    return res.status(200).send({ message: "Data fetched", permissions });
+    return res.status(200).json({ message: "Data fetched", permissions });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -50,12 +50,12 @@ export const UPDATE = async (req, res) => {
     );
 
     if (!permission) {
-      return res.status(404).send({ message: "Permission did not found" });
+      return res.status(404).json({ message: "Permission did not found" });
     }
 
-    return res.status(200).send({ message: "Permission updated", permission });
+    return res.status(200).json({ message: "Permission updated", permission });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -66,11 +66,11 @@ export const DELETE = async (req, res) => {
     const permission = await Permission.findOneAndDelete({ _id: id });
 
     if (!permission) {
-      return res.status(404).send({ message: "Permission did not found" });
+      return res.status(404).json({ message: "Permission did not found" });
     }
 
-    return res.status(200).send({ message: "Permission deleted" });
+    return res.status(200).json({ message: "Permission deleted" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

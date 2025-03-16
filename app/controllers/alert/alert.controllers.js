@@ -47,7 +47,7 @@ export const ALL = async (req, res) => {
       alerts: alertsWithStatus,
     });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -56,11 +56,11 @@ export const CREATE = async (req, res) => {
   const { type, config } = req.body;
 
   if (!uid) {
-    return res.status(400).send({ message: "User ID is required" });
+    return res.status(400).json({ message: "User ID is required" });
   }
 
   if (!["telegram", "email"].includes(type)) {
-    return res.status(400).send({ message: "Invalid alert type" });
+    return res.status(400).json({ message: "Invalid alert type" });
   }
 
   if (type === "telegram" && (!config.chatID || !config.botToken)) {
@@ -90,9 +90,9 @@ export const CREATE = async (req, res) => {
       isActive: true,
     });
 
-    return res.status(200).send({ message: "Alert created", alert: newAlert });
+    return res.status(200).json({ message: "Alert created", alert: newAlert });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -104,7 +104,7 @@ export const UPDATE = async (req, res) => {
     const alert = await Alert.findById(id);
 
     if (!alert) {
-      return res.status(404).send({ message: "Alert not found" });
+      return res.status(404).json({ message: "Alert not found" });
     }
 
     // Convert isActive to a boolean if it's provided
@@ -132,9 +132,9 @@ export const UPDATE = async (req, res) => {
     alert.isActive = updatedIsActive;
     await alert.save();
 
-    return res.status(200).send({ message: "Alert updated", alert });
+    return res.status(200).json({ message: "Alert updated", alert });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -145,12 +145,12 @@ export const DELETE = async (req, res) => {
     const alert = await Alert.findOneAndDelete({ _id: id });
 
     if (!alert) {
-      return res.status(404).send({ message: "Alert did not found" });
+      return res.status(404).json({ message: "Alert did not found" });
     }
 
-    return res.status(200).send({ message: "Alert deleted" });
+    return res.status(200).json({ message: "Alert deleted" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -159,7 +159,7 @@ export const TEST_ALERT = async (req, res) => {
 
   try {
     if (!type) {
-      return res.status(500).send({ message: "Type is required" });
+      return res.status(500).json({ message: "Type is required" });
     }
 
     if (type === "telegram") {
@@ -186,7 +186,7 @@ export const TEST_ALERT = async (req, res) => {
           .status(200)
           .send({ message: "Telegram test message sent successfully" });
       } catch (telegramError) {
-        return res.status(500).send({
+        return res.status(500).json({
           message: telegramError.message,
         });
       }
@@ -217,8 +217,8 @@ export const TEST_ALERT = async (req, res) => {
         .send({ message: "Email test message sent successfully" });
     }
 
-    return res.status(500).send({ message: "Type is not found" });
+    return res.status(500).json({ message: "Type is not found" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

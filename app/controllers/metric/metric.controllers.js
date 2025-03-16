@@ -45,8 +45,8 @@ export const READ = async (req, res) => {
     const responseSize = Buffer.byteLength(JSON.stringify(response), "utf8");
     console.log(`Response size: ${responseSize} bytes`);
 
-    return res.status(200).send(response);
+    return res.status(200).json(response);
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

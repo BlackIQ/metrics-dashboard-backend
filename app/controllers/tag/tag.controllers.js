@@ -10,9 +10,9 @@ export const CREATE = async (req, res) => {
   try {
     const tag = await Tag.create({ ...data, user, value });
 
-    return res.status(200).send({ message: "Tag created", tag });
+    return res.status(200).json({ message: "Tag created", tag });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -23,12 +23,12 @@ export const SINGLE = async (req, res) => {
     const tag = await Tag.findOne({ _id: id });
 
     if (!tag) {
-      return res.status(404).send({ message: "Tag did not found" });
+      return res.status(404).json({ message: "Tag did not found" });
     }
 
-    return res.status(200).send({ message: "Tag found", tag });
+    return res.status(200).json({ message: "Tag found", tag });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -38,9 +38,9 @@ export const ALL = async (req, res) => {
   try {
     const tags = await Tag.find(filter).populate("user");
 
-    return res.status(200).send({ message: "Data fetched", tags });
+    return res.status(200).json({ message: "Data fetched", tags });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -56,12 +56,12 @@ export const UPDATE = async (req, res) => {
     );
 
     if (!tag) {
-      return res.status(404).send({ message: "Tag did not found" });
+      return res.status(404).json({ message: "Tag did not found" });
     }
 
-    return res.status(200).send({ message: "Tag updated", tag });
+    return res.status(200).json({ message: "Tag updated", tag });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -72,11 +72,11 @@ export const DELETE = async (req, res) => {
     const tag = await Tag.findOneAndDelete({ _id: id });
 
     if (!tag) {
-      return res.status(404).send({ message: "Tag did not found" });
+      return res.status(404).json({ message: "Tag did not found" });
     }
 
-    return res.status(200).send({ message: "Tag deleted" });
+    return res.status(200).json({ message: "Tag deleted" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

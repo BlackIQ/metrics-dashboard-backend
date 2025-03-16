@@ -10,9 +10,9 @@ export const CREATE = async (req, res) => {
   try {
     const group = await Group.create({ ...data, user, value });
 
-    return res.status(200).send({ message: "Group created", group });
+    return res.status(200).json({ message: "Group created", group });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -23,12 +23,12 @@ export const SINGLE = async (req, res) => {
     const group = await Group.findOne({ _id: id });
 
     if (!group) {
-      return res.status(404).send({ message: "Group did not found" });
+      return res.status(404).json({ message: "Group did not found" });
     }
 
-    return res.status(200).send({ message: "Group found", group });
+    return res.status(200).json({ message: "Group found", group });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -38,9 +38,9 @@ export const ALL = async (req, res) => {
   try {
     const groups = await Group.find(filter).populate("user");
 
-    return res.status(200).send({ message: "Data fetched", groups });
+    return res.status(200).json({ message: "Data fetched", groups });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -56,12 +56,12 @@ export const UPDATE = async (req, res) => {
     );
 
     if (!group) {
-      return res.status(404).send({ message: "Group did not found" });
+      return res.status(404).json({ message: "Group did not found" });
     }
 
-    return res.status(200).send({ message: "Group updated", group });
+    return res.status(200).json({ message: "Group updated", group });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -72,11 +72,11 @@ export const DELETE = async (req, res) => {
     const group = await Group.findOneAndDelete({ _id: id });
 
     if (!group) {
-      return res.status(404).send({ message: "Group did not found" });
+      return res.status(404).json({ message: "Group did not found" });
     }
 
-    return res.status(200).send({ message: "Group deleted" });
+    return res.status(200).json({ message: "Group deleted" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

@@ -16,12 +16,12 @@ export const SINGLE = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).send({ message: "User did not found" });
+      return res.status(404).json({ message: "User did not found" });
     }
 
-    return res.status(200).send({ message: "User found", user });
+    return res.status(200).json({ message: "User found", user });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -37,9 +37,9 @@ export const ALL = async (req, res) => {
       },
     });
 
-    return res.status(200).send({ message: "Data fetched", users });
+    return res.status(200).json({ message: "Data fetched", users });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -55,12 +55,12 @@ export const UPDATE = async (req, res) => {
     );
 
     if (!user) {
-      return res.status(404).send({ message: "User did not found" });
+      return res.status(404).json({ message: "User did not found" });
     }
 
-    return res.status(200).send({ message: "User updated", user });
+    return res.status(200).json({ message: "User updated", user });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -71,12 +71,12 @@ export const DELETE = async (req, res) => {
     const user = await User.findOneAndDelete({ _id: id });
 
     if (!user) {
-      return res.status(404).send({ message: "User did not found" });
+      return res.status(404).json({ message: "User did not found" });
     }
 
-    return res.status(200).send({ message: "User deleted" });
+    return res.status(200).json({ message: "User deleted" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -94,11 +94,11 @@ export const CHANGE_PASSWORD = async (req, res) => {
     );
 
     if (!user) {
-      return res.status(404).send({ message: "User did not found" });
+      return res.status(404).json({ message: "User did not found" });
     }
 
-    return res.status(200).send({ message: "User password changed", user });
+    return res.status(200).json({ message: "User password changed", user });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

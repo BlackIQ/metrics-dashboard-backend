@@ -15,13 +15,13 @@ export const LOGIN = async (req, res) => {
         .send({ message: "Invalid credentials or unconfirmed email" });
     }
 
-    return res.status(200).send({
+    return res.status(200).json({
       message: "Welcome",
       token: createToken({ id: user._id }),
       user: user,
     });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -32,7 +32,7 @@ export const REGISTER = async (req, res) => {
     const user = await User.findOne({ email: data.email });
 
     if (user) {
-      return res.status(401).send({ message: "Email already exists" });
+      return res.status(401).json({ message: "Email already exists" });
     }
 
     const userRole = await Role.findOne({ value: "user" });
@@ -70,11 +70,11 @@ export const REGISTER = async (req, res) => {
       confirmEmailContent(data.rayid)
     );
 
-    return res.status(200).send({
+    return res.status(200).json({
       message: "User created. Please check your email to confirm.",
     });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -117,7 +117,7 @@ export const CONFIRM = async (req, res) => {
       welcomeEmailContent(user.email)
     );
 
-    return res.status(200).send({
+    return res.status(200).json({
       message: "Welcome",
       token: createToken({ id: user._id }),
       user: user,

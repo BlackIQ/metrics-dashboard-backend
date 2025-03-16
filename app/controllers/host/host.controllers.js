@@ -9,9 +9,9 @@ export const CREATE = async (req, res) => {
   try {
     const host = await Host.create({ ...data, user });
 
-    return res.status(200).send({ message: "Host created", host });
+    return res.status(200).json({ message: "Host created", host });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -22,12 +22,12 @@ export const SINGLE = async (req, res) => {
     const host = await Host.findOne({ _id: id });
 
     if (!host) {
-      return res.status(404).send({ message: "Host did not found" });
+      return res.status(404).json({ message: "Host did not found" });
     }
 
-    return res.status(200).send({ message: "Host found", host });
+    return res.status(200).json({ message: "Host found", host });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -40,9 +40,9 @@ export const ALL = async (req, res) => {
       .populate("groups")
       .populate("tags");
 
-    return res.status(200).send({ message: "Data fetched", hosts });
+    return res.status(200).json({ message: "Data fetched", hosts });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -58,12 +58,12 @@ export const UPDATE = async (req, res) => {
     );
 
     if (!host) {
-      return res.status(404).send({ message: "Host did not found" });
+      return res.status(404).json({ message: "Host did not found" });
     }
 
-    return res.status(200).send({ message: "Host updated", host });
+    return res.status(200).json({ message: "Host updated", host });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -74,12 +74,12 @@ export const DELETE = async (req, res) => {
     const host = await Host.findOneAndDelete({ _id: id });
 
     if (!host) {
-      return res.status(404).send({ message: "Host did not found" });
+      return res.status(404).json({ message: "Host did not found" });
     }
 
-    return res.status(200).send({ message: "Host deleted" });
+    return res.status(200).json({ message: "Host deleted" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -99,8 +99,8 @@ export const CHECK = async (req, res) => {
       throw new Error("Ping response invalid");
     }
 
-    return res.status(200).send({ message: "Server is ok!" });
+    return res.status(200).json({ message: "Server is ok!" });
   } catch (error) {
-    return res.status(500).send({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
