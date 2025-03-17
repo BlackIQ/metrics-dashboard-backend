@@ -9,7 +9,11 @@ import express from "express";
 
 import { Role } from "$app/controllers/index.js";
 
+import { superuser } from "$app/middlewares/index.js";
+
 const router = express.Router();
+
+router.use(superuser);
 
 router.get("/", Role.ALL);
 router.post("/", Role.CREATE);

@@ -9,7 +9,11 @@ import express from "express";
 
 import { Permission } from "$app/controllers/index.js";
 
+import { superuser } from "$app/middlewares/index.js";
+
 const router = express.Router();
+
+router.use(superuser);
 
 router.get("/", Permission.ALL);
 router.post("/", Permission.CREATE);
