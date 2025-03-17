@@ -6,19 +6,24 @@ const mongooseSchema = mongoose.Schema;
 export const schemaModel = {
   label: {
     type: String,
-    default: "",
+    required: true,
   },
   value: {
     type: String,
-    default: "",
+    required: true,
+    unique: true,
   },
   user: {
     type: mongooseSchema.Types.ObjectId,
     ref: "User",
     default: null,
+    required: true,
   },
 };
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
+
+schema.index({ user: 1 });
+schema.index({ value: 1 }, { unique: true });
 
 export default mongo.model("Group", schema);

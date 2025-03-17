@@ -6,7 +6,7 @@ const mongooseSchema = mongoose.Schema;
 export const schemaModel = {
   name: {
     type: String,
-    default: "",
+    required: true,
   },
   details: {
     type: String,
@@ -14,19 +14,22 @@ export const schemaModel = {
   },
   ip: {
     type: String,
+    match: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/,
     default: "",
   },
   dns: {
     type: String,
+    match: /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     default: "",
   },
   port: {
     type: String,
-    default: "",
+    match: /^\d{1,5}$/,
+    default: "80",
   },
   apiKey: {
     type: String,
-    default: "",
+    required: true,
   },
   ipCommunication: {
     type: Boolean,
@@ -34,7 +37,7 @@ export const schemaModel = {
   },
   agentAvailable: {
     type: Boolean,
-    default: null,
+    default: false,
   },
   dockerMetrics: {
     type: Boolean,
@@ -47,24 +50,25 @@ export const schemaModel = {
   user: {
     type: mongooseSchema.Types.ObjectId,
     ref: "User",
-    default: null,
+    required: true,
   },
   groups: [
     {
       type: mongooseSchema.Types.ObjectId,
       ref: "Group",
-      default: [],
     },
   ],
   tags: [
     {
       type: mongooseSchema.Types.ObjectId,
       ref: "Tag",
-      default: [],
     },
   ],
 };
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
+
+schema.index({ user: 1 });
+schema.index({ ip: 1, port: 1 });
 
 export default mongo.model("Host", schema);

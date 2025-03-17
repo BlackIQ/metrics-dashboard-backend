@@ -14,15 +14,19 @@ export const schemaModel = {
   },
   password: {
     type: String,
-    default: "",
+    required: true,
+    select: false,
   },
   email: {
     type: String,
-    default: "",
+    required: true,
+    unique: true,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
   rayid: {
     type: String,
-    default: "",
+    required: true,
+    unique: true,
   },
   isConfirmed: {
     type: Boolean,
@@ -31,10 +35,13 @@ export const schemaModel = {
   role: {
     type: mongooseSchema.Types.ObjectId,
     ref: "Role",
-    default: null,
+    required: true,
   },
 };
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
+
+schema.index({ email: 1 }, { unique: true });
+schema.index({ rayid: 1 }, { unique: true });
 
 export default mongo.model("User", schema);
