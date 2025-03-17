@@ -7,13 +7,25 @@ import { appConfig } from "$app/config/index.js";
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(cors());
+// Morgan
+app.use(
+  morgan(appConfig.environment === "production" ? "combined" : "dev", {
+    immediate: true,
+  })
+);
 
+// Cors
+app.use(
+  cors({
+    origin: ["https://cloud.openhubble.com", "http://localhost:3000"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+  })
+);
+
+// Express
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "10kb" }));
 app.set("json spaces", 2);
-
-app.use(morgan("dev"));
 
 app.use("/api", Routes);
 app.use("*", (req, res) =>
@@ -24,5 +36,10 @@ app.use("*", (req, res) =>
     version: appConfig.version,
   })
 );
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ message: "Internal server error" });
+});
 
 export default app;
