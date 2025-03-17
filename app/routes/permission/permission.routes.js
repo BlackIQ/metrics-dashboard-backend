@@ -12,6 +12,7 @@ import {
   permissionSchema,
   permissionUpdateSchema,
   permissionParamsSchema,
+  paginationSchema,
 } from "$app/validations/index.js";
 import { superuser, validate } from "$app/middlewares/index.js";
 
@@ -19,7 +20,7 @@ const router = express.Router();
 
 router.use(superuser);
 
-router.get("/", Permission.ALL);
+router.get("/", validate({ querySchema: paginationSchema }), Permission.ALL);
 router.post("/", validate({ bodySchema: permissionSchema }), Permission.CREATE);
 router.get(
   "/:id",
