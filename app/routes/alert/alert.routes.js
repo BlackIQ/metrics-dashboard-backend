@@ -13,7 +13,6 @@ const router = express.Router();
 
 router.get("/", Alert.ALL);
 router.post("/", Alert.CREATE);
-// router.get("/:id", Alert.SINGLE);
 router.patch("/:id", Alert.UPDATE);
 router.delete("/:id", Alert.DELETE);
 router.post("/test", Alert.TEST_ALERT);
