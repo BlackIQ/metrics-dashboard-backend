@@ -82,3 +82,35 @@ export const hostParamsSchema = Joi.object({
     "any.required": "ID is required",
   }),
 });
+
+export const hostCheckSchema = Joi.object({
+  host: Joi.object({
+    ip: Joi.string()
+      .pattern(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)
+      .allow("")
+      .messages({
+        "string.pattern.base": "IP must be a valid IPv4 address",
+      }),
+    dns: Joi.string()
+      .pattern(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+      .allow("")
+      .messages({
+        "string.pattern.base": "DNS must be a valid domain name",
+      }),
+    port: Joi.number().integer().min(1).max(65535).default(80).messages({
+      "number.base": "Port must be a number",
+      "number.integer": "Port must be an integer",
+      "number.min": "Port must be at least 1",
+      "number.max": "Port cannot exceed 65535",
+    }),
+    ipCommunication: Joi.boolean().default(false).messages({
+      "boolean.base": "ipCommunication must be a boolean",
+    }),
+  })
+    .required()
+    .or("ip", "dns")
+    .messages({
+      "any.required": "Host object is required",
+      "object.or": "Either ip or dns must be provided",
+    }),
+});
