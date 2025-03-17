@@ -11,8 +11,6 @@ import { logMongo } from "$app/connections/index.js";
 // File log
 import { fileConfig } from "$app/config/index.js";
 
-console.log(fileConfig);
-
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
