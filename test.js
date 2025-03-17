@@ -1,11 +1,18 @@
 import { appConfig } from "$app/config/index.js";
 import { startMetricsCollection } from "$app/services/index.js";
+import logger from "$app/log/index.js";
 
 import app from "$app";
 
-import chalk from "chalk";
+import os from "os";
 
 app.listen(appConfig.port, () => {
-  console.log(chalk.cyan(`App is running on ${appConfig.port}`));
+  logger.info("App is running", {
+    context: "app", // Category: app lifecycle
+    port: appConfig.port, // Specific detail
+    env: appConfig.environment, // Environment
+    host: os.hostname(), // Server identifier
+    version: appConfig.version, // App version for tracking updates
+  });
   startMetricsCollection();
 });
