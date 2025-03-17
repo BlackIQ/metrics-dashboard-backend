@@ -12,12 +12,14 @@ import {
   alertSchema,
   alertUpdateSchema,
   alertParamsSchema,
+  alertTestSchema,
+  paginationSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", Alert.ALL);
+router.get("/", validate({ querySchema: paginationSchema }), Alert.ALL);
 router.post("/", validate({ bodySchema: alertSchema }), Alert.CREATE);
 router.patch(
   "/:id",
@@ -31,6 +33,10 @@ router.delete(
   resourceOwnership("Alert"),
   Alert.DELETE
 );
-router.post("/test", Alert.TEST_ALERT); // TODO: Validation for TEST
+router.post(
+  "/test",
+  validate({ bodySchema: alertTestSchema }),
+  Alert.TEST_ALERT
+);
 
 export default router;

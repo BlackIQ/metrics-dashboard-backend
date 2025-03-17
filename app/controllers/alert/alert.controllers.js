@@ -1,5 +1,6 @@
 import { Alert } from "$app/models/index.js";
 import { sendTelegramMessage, sendEmail } from "$app/utils/index.js";
+import logger from "$app/log/index.js";
 
 const baseAlerts = [
   {
@@ -7,27 +8,24 @@ const baseAlerts = [
     identifier: "telegram",
     details: "Send alert via Telegram",
   },
-  {
-    name: "Email",
-    identifier: "email",
-    details: "Get alerts using Email",
-  },
-  // {
-  //   name: "Webhook",
-  //   identifier: "webhook",
-  //   details: "Send alert to your own custom API",
-  // },
+  { name: "Email", identifier: "email", details: "Get alerts using Email" },
+  // { name: "Webhook", identifier: "webhook", details: "Send alert to your own custom API" },
 ];
 
 export const ALL = async (req, res) => {
-  const { uid } = req.headers;
+  const { page, limit } = req.query;
+  const user = req.user.id;
 
   try {
-    const userAlerts = await Alert.find({ user: uid });
+    const userAlerts = await Alert.find({ user })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await Alert.countDocuments({ user });
 
     const alertsWithStatus = baseAlerts.map((alert) => {
       const userAlert = userAlerts.find((ua) => ua.type === alert.identifier);
-
       return {
         ...alert,
         alertStatus: userAlert
@@ -42,57 +40,74 @@ export const ALL = async (req, res) => {
       };
     });
 
+    logger.info("Alerts fetched", {
+      context: "alert",
+      userId: user,
+      page,
+      limit,
+      total,
+    });
+
     return res.status(200).json({
       message: "User alert settings",
       alerts: alertsWithStatus,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Alerts fetch failed", {
+      context: "alert",
+      error: error.message,
+      stack: error.stack,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to fetch alerts" });
   }
 };
 
 export const CREATE = async (req, res) => {
-  const { uid } = req.headers;
+  const user = req.user.id;
   const { type, config } = req.body;
 
-  if (!uid) {
-    return res.status(400).json({ message: "User ID is required" });
-  }
-
-  if (!["telegram", "email"].includes(type)) {
-    return res.status(400).json({ message: "Invalid alert type" });
-  }
-
-  if (type === "telegram" && (!config.chatID || !config.botToken)) {
-    return res
-      .status(400)
-      .send({ message: "chatID and botToken are required for Telegram" });
-  }
-  if (type === "email" && !config.destinationEmail) {
-    return res
-      .status(400)
-      .send({ message: "destinationEmail is required for Email alerts" });
-  }
-
   try {
-    const existingAlert = await Alert.findOne({ user: uid, type });
+    const existingAlert = await Alert.findOne({ user, type });
 
     if (existingAlert) {
+      logger.warn("Alert already exists", {
+        context: "alert",
+        userId: user,
+        type,
+      });
+
       return res
         .status(409)
-        .send({ message: "Alert already exists, use update instead" });
+        .json({ message: "Alert already exists, use update instead" });
     }
 
-    const newAlert = await Alert.create({
-      user: uid,
-      type,
-      config,
-      isActive: true,
+    const newAlert = await Alert.create({ user, type, config, isActive: true });
+
+    logger.info("Alert created", {
+      context: "alert",
+      resourceType: "alert",
+      resourceId: newAlert._id.toString(),
+      userId: user,
     });
 
-    return res.status(200).json({ message: "Alert created", alert: newAlert });
+    return res.status(201).json({ message: "Alert created", alert: newAlert });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Alert creation failed", {
+      context: "alert",
+      error: error.message,
+      stack: error.stack,
+      userId: user,
+    });
+
+    return res.status(500).json({ message: "Failed to create alert" });
   }
 };
 
@@ -104,37 +119,42 @@ export const UPDATE = async (req, res) => {
     const alert = await Alert.findById(id);
 
     if (!alert) {
+      logger.warn("Alert not found for update", {
+        context: "alert",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
       return res.status(404).json({ message: "Alert not found" });
     }
 
-    // Convert isActive to a boolean if it's provided
-    const updatedIsActive =
-      typeof isActive !== "undefined"
-        ? isActive === true || isActive === "true"
-        : alert.isActive;
-
-    // If config exists, validate based on alert type
     if (config) {
-      if (alert.type === "telegram" && (!config.chatID || !config.botToken)) {
-        return res
-          .status(400)
-          .send({ message: "chatID and botToken are required for Telegram" });
-      }
-      if (alert.type === "email" && !config.destinationEmail) {
-        return res
-          .status(400)
-          .send({ message: "destinationEmail is required for Email alerts" });
-      }
-
       alert.config = config;
     }
 
-    alert.isActive = updatedIsActive;
+    if (typeof isActive !== "undefined") {
+      alert.isActive = isActive === true || isActive === "true";
+    }
+
     await alert.save();
+
+    logger.info("Alert updated", {
+      context: "alert",
+      resourceId: id,
+      userId: req.user.id,
+    });
 
     return res.status(200).json({ message: "Alert updated", alert });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Alert update failed", {
+      context: "alert",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to update alert" });
   }
 };
 
@@ -142,15 +162,35 @@ export const DELETE = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const alert = await Alert.findOneAndDelete({ _id: id });
+    const alert = await Alert.findByIdAndDelete(id);
 
     if (!alert) {
-      return res.status(404).json({ message: "Alert did not found" });
+      logger.warn("Alert not found for deletion", {
+        context: "alert",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
+      return res.status(404).json({ message: "Alert not found" });
     }
 
-    return res.status(200).json({ message: "Alert deleted" });
+    logger.info("Alert deleted", {
+      context: "alert",
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(204).json();
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Alert deletion failed", {
+      context: "alert",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to delete alert" });
   }
 };
 
@@ -158,17 +198,7 @@ export const TEST_ALERT = async (req, res) => {
   const { config, type } = req.body;
 
   try {
-    if (!type) {
-      return res.status(500).json({ message: "Type is required" });
-    }
-
     if (type === "telegram") {
-      if (!config.chatID || !config.botToken) {
-        return res
-          .status(400)
-          .send({ message: "chatID and botToken are required for Telegram" });
-      }
-
       const messages = [
         "OpenHubble Cloud 🔭",
         "",
@@ -176,32 +206,27 @@ export const TEST_ALERT = async (req, res) => {
         "Stay tuned for real-time alerts directly here! 🚀",
       ];
 
-      try {
-        await sendTelegramMessage(
-          config.chatID,
-          config.botToken,
-          messages.join("\n")
-        );
-        return res
-          .status(200)
-          .send({ message: "Telegram test message sent successfully" });
-      } catch (telegramError) {
-        return res.status(500).json({
-          message: telegramError.message,
-        });
-      }
+      await sendTelegramMessage(
+        config.chatID,
+        config.botToken,
+        messages.join("\n")
+      );
+
+      logger.info("Telegram test sent", {
+        context: "alert",
+        userId: req.user.id,
+        type,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Telegram test message sent successfully" });
     }
 
     if (type === "email") {
-      if (!config.destinationEmail) {
-        return res
-          .status(400)
-          .send({ message: "destinationEmail is required for Email alerts" });
-      }
-
       const emailContent = `
         <p style="font-size: 18px; color: #00FFFF;">OpenHubble Cloud 🔭</p>
-        <p>&nbsp;</p>
+        <p> </p>
         <p>Your account is now connected to Email.</p>
         <p>Stay tuned for real-time alerts directly in your inbox! 🚀</p>
       `;
@@ -212,13 +237,27 @@ export const TEST_ALERT = async (req, res) => {
         emailContent
       );
 
+      logger.info("Email test sent", {
+        context: "alert",
+        userId: req.user.id,
+        type,
+      });
+
       return res
         .status(200)
-        .send({ message: "Email test message sent successfully" });
+        .json({ message: "Email test message sent successfully" });
     }
-
-    return res.status(500).json({ message: "Type is not found" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Test alert failed", {
+      context: "alert",
+      error: error.message,
+      stack: error.stack,
+      userId: req.user.id,
+      type,
+    });
+
+    return res
+      .status(500)
+      .json({ message: `Failed to send ${type} test: ${error.message}` });
   }
 };
