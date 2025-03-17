@@ -14,5 +14,8 @@ app.listen(appConfig.port, () => {
     host: os.hostname(), // Server identifier
     version: appConfig.version, // App version for tracking updates
   });
-  startMetricsCollection();
+
+  if (appConfig.environment === "production") {
+    startMetricsCollection();
+  }
 });
