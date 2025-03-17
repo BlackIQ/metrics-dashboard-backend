@@ -1,6 +1,5 @@
 // Express
 import express from "express";
-import rateLimit from "express-rate-limit";
 
 // Libs
 import cors from "cors";
@@ -62,7 +61,7 @@ app.use((req, res, next) => {
   return next();
 });
 
-app.use(rateLimit);
+app.use(ratelimit);
 
 // API
 app.use("/api", Routes);
