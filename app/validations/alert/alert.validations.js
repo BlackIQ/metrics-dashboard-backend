@@ -32,6 +32,9 @@ export const alertSchema = Joi.object({
     .messages({
       "any.required": "Config is required",
     }),
+  isActive: Joi.boolean().required().messages({
+    "any.required": "isActive is required",
+  }),
 });
 
 export const alertUpdateSchema = alertSchema.fork(
