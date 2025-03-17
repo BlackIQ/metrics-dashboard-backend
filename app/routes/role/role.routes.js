@@ -12,6 +12,7 @@ import {
   roleSchema,
   roleUpdateSchema,
   roleParamsSchema,
+  paginationSchema,
 } from "$app/validations/index.js";
 import { superuser, validate } from "$app/middlewares/index.js";
 
@@ -19,7 +20,7 @@ const router = express.Router();
 
 router.use(superuser);
 
-router.get("/", Role.ALL);
+router.get("/", validate({ querySchema: paginationSchema }), Role.ALL);
 router.post("/", validate({ bodySchema: roleSchema }), Role.CREATE);
 router.get("/:id", validate({ paramsSchema: roleParamsSchema }), Role.SINGLE);
 router.delete(
