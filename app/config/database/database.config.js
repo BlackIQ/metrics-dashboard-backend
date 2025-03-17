@@ -8,8 +8,11 @@
 import env from "$app/env/index.js";
 
 export default {
-  mongo: {
-    connection: env.MONGO_CONNNECTION_STRING,
+  appMongo: {
+    connection: env.APP_MONGO_CONNNECTION_STRING,
+  },
+  logMongo: {
+    connection: env.LOG_MONGO_CONNNECTION_STRING,
   },
   redis: {
     connection: env.REDIS_CONNNECTION_STRING,
