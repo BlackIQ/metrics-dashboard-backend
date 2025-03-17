@@ -12,12 +12,13 @@ import {
   groupSchema,
   groupUpdateSchema,
   groupParamsSchema,
+  paginationSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", Group.ALL);
+router.get("/", validate({ querySchema: paginationSchema }), Group.ALL);
 router.post("/", validate({ bodySchema: groupSchema }), Group.CREATE);
 router.get(
   "/:id",
