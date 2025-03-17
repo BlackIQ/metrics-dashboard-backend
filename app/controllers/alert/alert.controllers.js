@@ -1,6 +1,11 @@
+// Models
 import { Alert } from "$app/models/index.js";
-import { sendTelegramMessage, sendEmail } from "$app/utils/index.js";
+
+// Logger
 import logger from "$app/log/index.js";
+
+// Utils
+import { sendTelegramMessage, sendEmail } from "$app/utils/index.js";
 
 const baseAlerts = [
   {

@@ -1,8 +1,11 @@
+// Models
 import { Tag } from "$app/models/index.js";
-import logger from "$app/log/index.js";
-import crypto from "crypto";
 
-const generateSecureValue = () => crypto.randomBytes(10).toString("hex");
+// Logger
+import logger from "$app/log/index.js";
+
+// Utils
+import { generateSecureValue } from "$app/utils/index.js";
 
 export const ALL = async (req, res) => {
   try {

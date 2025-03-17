@@ -1,6 +1,11 @@
+// Models
 import { Host } from "$app/models/index.js";
-import axios from "axios";
+
+// Logger
 import logger from "$app/log/index.js";
+
+// Libs
+import axios from "axios";
 
 export const ALL = async (req, res) => {
   const { page, limit } = req.query;

@@ -1,4 +1,7 @@
+// Models
 import { Role, Permission } from "$app/models/index.js";
+
+// Logger
 import logger from "$app/log/index.js";
 
 export const ALL = async (req, res) => {

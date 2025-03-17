@@ -1,8 +1,11 @@
+// Models
 import { Group } from "$app/models/index.js";
-import logger from "$app/log/index.js";
-import crypto from "crypto";
 
-const generateSecureValue = () => crypto.randomBytes(10).toString("hex");
+// Logger
+import logger from "$app/log/index.js";
+
+// Utils
+import { generateSecureValue } from "$app/utils/index.js";
 
 export const ALL = async (req, res) => {
   try {
@@ -24,7 +27,7 @@ export const ALL = async (req, res) => {
       limit,
       total,
     });
-    
+
     return res.status(200).json({
       message: "Groups fetched",
       groups,
@@ -55,7 +58,7 @@ export const CREATE = async (req, res) => {
 
   try {
     const group = await Group.create({ ...data, user, value });
-    
+
     logger.info("Group created", {
       context: "group",
       resourceType: "group",
