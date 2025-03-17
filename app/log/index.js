@@ -9,7 +9,7 @@ import path from "path";
 import { logMongo } from "$app/connections/index.js";
 
 // File log
-import { fileConfig } from "$app/config/index.js";
+import { fileConfig, appConfig } from "$app/config/index.js";
 
 const logger = winston.createLogger({
   level: "info",
@@ -20,7 +20,7 @@ const logger = winston.createLogger({
   transports: [
     new MongoDB({
       db: logMongo,
-      collection: "logs",
+      collection: appConfig.environment === "production" ? "logs" : "dev-logs",
       level: "info",
       storeHost: true,
       capped: true,
