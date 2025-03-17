@@ -5,3 +5,4 @@ export * from "$app/validations/tag/tag.validations.js";
 export * from "$app/validations/host/host.validations.js";
 export * from "$app/validations/user/user.validations.js";
 export * from "$app/validations/alert/alert.validations.js";
+export * from "$app/validations/pagination/pagination.validations.js";
