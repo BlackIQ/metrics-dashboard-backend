@@ -1,27 +1,57 @@
-import { createToken, ray } from "$app/functions/index.js";
+// Models
 import { User, Role } from "$app/models/index.js";
-import { sendEmail } from "$app/utils/index.js";
+
+// Logger
+import logger from "$app/log/index.js";
+
+// Utils
+import {
+  sendEmail,
+  createToken,
+  generateSecureValue,
+} from "$app/utils/index.js";
+
+// Libs
 import md5 from "md5";
 
 export const LOGIN = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email, password: md5(password) });
+    const user = await User.findOne({ email, password: md5(password) }).lean();
 
     if (!user || !user.isConfirmed) {
+      logger.warn("Login failed - invalid credentials or unconfirmed", {
+        context: "auth",
+        email,
+      });
+
       return res
         .status(401)
-        .send({ message: "Invalid credentials or unconfirmed email" });
+        .json({ message: "Invalid credentials or unconfirmed email" });
     }
+
+    const token = createToken({ id: user._id });
+
+    logger.info("User logged in", {
+      context: "auth",
+      userId: user._id.toString(),
+    });
 
     return res.status(200).json({
       message: "Welcome",
-      token: createToken({ id: user._id }),
-      user: user,
+      token,
+      user,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Login failed", {
+      context: "auth",
+      error: error.message,
+      stack: error.stack,
+      email,
+    });
+
+    return res.status(500).json({ message: "Failed to login" });
   }
 };
 
@@ -29,22 +59,38 @@ export const REGISTER = async (req, res) => {
   const data = req.body;
 
   try {
-    const user = await User.findOne({ email: data.email });
+    const existingUser = await User.findOne({ email: data.email });
 
-    if (user) {
-      return res.status(401).json({ message: "Email already exists" });
+    if (existingUser) {
+      logger.warn("Registration failed - email exists", {
+        context: "auth",
+        email: data.email,
+      });
+
+      return res.status(409).json({ message: "Email already exists" });
     }
 
     const userRole = await Role.findOne({ value: "user" });
 
-    data.password = md5(data.password);
-    data.role = data.role || userRole._id;
-    data.rayid = ray.gen(50);
-    data.isConfirmed = false;
+    if (!userRole) {
+      logger.error("Default user role not found", { context: "auth" });
 
-    await User.create(data);
+      return res.status(500).json({ message: "Server configuration error" });
+    }
 
-    const confirmEmailContent = (rayid) => `
+    const rayid = generateSecureValue(50);
+
+    const newUser = {
+      ...data,
+      password: md5(data.password),
+      role: data.role || userRole._id,
+      rayid,
+      isConfirmed: false,
+    };
+
+    const user = await User.create(newUser);
+
+    const confirmEmailContent = `
       <p style="font-size: 18px; color: #00FFFF;">Welcome to OpenHubble Cloud! 🔭</p>
       <p> </p>
       <p>You're one step away from diving into your OpenHubble Cloud panel.</p>
@@ -67,14 +113,27 @@ export const REGISTER = async (req, res) => {
     await sendEmail(
       data.email,
       "Confirm Your OpenHubble Cloud Account",
-      confirmEmailContent(data.rayid)
+      confirmEmailContent
     );
 
-    return res.status(200).json({
+    logger.info("User registered", {
+      context: "auth",
+      userId: user._id.toString(),
+      email: data.email,
+    });
+
+    return res.status(201).json({
       message: "User created. Please check your email to confirm.",
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Registration failed", {
+      context: "auth",
+      error: error.message,
+      stack: error.stack,
+      email: data.email,
+    });
+
+    return res.status(500).json({ message: "Failed to register" });
   }
 };
 
@@ -82,18 +141,24 @@ export const CONFIRM = async (req, res) => {
   const { rayid } = req.body;
 
   try {
-    const user = await User.findOne({ rayid: rayid });
+    const user = await User.findOneAndUpdate(
+      { rayid },
+      { $set: { isConfirmed: true, rayid: null } },
+      { new: true }
+    );
 
     if (!user) {
+      logger.warn("Confirmation failed - invalid rayid", {
+        context: "auth",
+        rayid,
+      });
+
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    await User.findOneAndUpdate(
-      { _id: user._id },
-      { $set: { isConfirmed: true } }
-    );
+    const token = createToken({ id: user._id });
 
-    const welcomeEmailContent = (userEmail) => `
+    const welcomeEmailContent = `
       <p style="font-size: 18px; color: #00FFFF;">You’re In! Welcome to OpenHubble Cloud! 🔭</p>
       <p> </p>
       <p>Congratulations, ${user.firstName}!</p>
@@ -114,15 +179,28 @@ export const CONFIRM = async (req, res) => {
     await sendEmail(
       user.email,
       "Welcome to OpenHubble Cloud!",
-      welcomeEmailContent(user.email)
+      welcomeEmailContent
     );
+
+    logger.info("User confirmed", {
+      context: "auth",
+      userId: user._id.toString(),
+      email: user.email,
+    });
 
     return res.status(200).json({
       message: "Welcome",
-      token: createToken({ id: user._id }),
-      user: user,
+      token,
+      user,
     });
   } catch (error) {
-    return res.status(400).json({ message: "Invalid or expired token" });
+    logger.error("Confirmation failed", {
+      context: "auth",
+      error: error.message,
+      stack: error.stack,
+      rayid,
+    });
+
+    return res.status(500).json({ message: "Failed to confirm" });
   }
 };
