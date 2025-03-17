@@ -16,7 +16,6 @@ export const schemaModel = {
   user: {
     type: mongooseSchema.Types.ObjectId,
     ref: "User",
-    default: null,
     required: true,
   },
 };
