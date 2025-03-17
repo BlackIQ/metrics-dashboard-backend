@@ -8,16 +8,35 @@
 import express from "express";
 
 import { Host } from "$app/controllers/index.js";
-
-import { resourceOwnership } from "$app/middlewares/index.js";
+import {
+  hostSchema,
+  hostUpdateSchema,
+  hostParamsSchema,
+} from "$app/validations/index.js";
+import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
 router.get("/", Host.ALL);
-router.post("/", Host.CREATE);
-router.get("/:id", resourceOwnership("Host"), Host.SINGLE);
-router.delete("/:id", resourceOwnership("Host"), Host.DELETE);
-router.patch("/:id", resourceOwnership("Host"), Host.UPDATE);
+router.post("/", validate({ bodySchema: hostSchema }), Host.CREATE);
+router.get(
+  "/:id",
+  validate({ paramsSchema: hostParamsSchema }),
+  resourceOwnership("Host"),
+  Host.SINGLE
+);
+router.delete(
+  "/:id",
+  validate({ paramsSchema: hostParamsSchema }),
+  resourceOwnership("Host"),
+  Host.DELETE
+);
+router.patch(
+  "/:id",
+  validate({ bodySchema: hostUpdateSchema, paramsSchema: hostParamsSchema }),
+  resourceOwnership("Host"),
+  Host.UPDATE
+);
 router.post("/check", Host.CHECK);
 
 export default router;
