@@ -79,7 +79,7 @@ export const REGISTER = async (req, res) => {
 };
 
 export const CONFIRM = async (req, res) => {
-  const { rayid } = req.params;
+  const { rayid } = req.body;
 
   try {
     const user = await User.findOne({ rayid: rayid });
