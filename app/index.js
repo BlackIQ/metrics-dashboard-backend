@@ -10,7 +10,7 @@ const app = express();
 // Morgan
 app.use(
   morgan(appConfig.environment === "production" ? "combined" : "dev", {
-    immediate: true,
+    immediate: false,
   })
 );
 
