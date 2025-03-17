@@ -12,12 +12,14 @@ import {
   hostSchema,
   hostUpdateSchema,
   hostParamsSchema,
+  hostCheckSchema,
+  paginationSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", Host.ALL);
+router.get("/", validate({ querySchema: paginationSchema }), Host.ALL);
 router.post("/", validate({ bodySchema: hostSchema }), Host.CREATE);
 router.get(
   "/:id",
@@ -37,6 +39,6 @@ router.patch(
   resourceOwnership("Host"),
   Host.UPDATE
 );
-router.post("/check", Host.CHECK);
+router.post("/check", validate({ bodySchema: hostCheckSchema }), Host.CHECK);
 
 export default router;
