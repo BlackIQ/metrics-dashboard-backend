@@ -1,9 +1,22 @@
+// Express
 import express from "express";
+import rateLimit from "express-rate-limit";
+
+// Libs
 import cors from "cors";
 import morgan from "morgan";
 
+// Logger
+import logger from "$app/log/index.js";
+
+// Routes
 import Routes from "$app/routes/index.js";
+
+// Config
 import { appConfig } from "$app/config/index.js";
+
+// Middleware
+import { ratelimit } from "$app/middlewares/index.js";
 
 const app = express();
 
@@ -27,7 +40,34 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(express.json({ limit: "10kb" }));
 app.set("json spaces", 2);
 
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+
+    logger.info("Request processed", {
+      context: "request",
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      duration: `${duration}ms`,
+      userId: req.user?.id || "unauthenticated",
+      ip: req.ip,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  return next();
+});
+
+app.use(rateLimit);
+
+// API
 app.use("/api", Routes);
+
+// 404
 app.use("*", (req, res) =>
   res.status(404).json({
     url: req.originalUrl,
@@ -37,9 +77,17 @@ app.use("*", (req, res) =>
   })
 );
 
+// Error handling (example)
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ message: "Internal server error" });
+  logger.error("Unhandled error", {
+    context: "server",
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    userId: req.user?.id || "unauthenticated",
+  });
+
+  return res.status(500).json({ message: "Something went wrong" });
 });
 
 export default app;
