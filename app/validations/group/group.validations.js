@@ -7,14 +7,8 @@ export const groupSchema = Joi.object({
     "string.max": "Label cannot exceed 100 characters",
     "any.required": "Label is required",
   }),
-  value: Joi.string().min(1).max(100).required().messages({
-    "string.empty": "Value cannot be empty",
-    "string.min": "Value must be at least 1 character",
-    "string.max": "Value cannot exceed 100 characters",
-    "any.required": "Value is required",
-  }),
 });
 
-export const groupUpdateSchema = groupSchema.fork(["label", "value"], (field) =>
+export const groupUpdateSchema = groupSchema.fork(["label"], (field) =>
   field.optional()
 );
