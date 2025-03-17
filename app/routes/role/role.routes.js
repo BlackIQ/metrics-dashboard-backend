@@ -8,17 +8,29 @@
 import express from "express";
 
 import { Role } from "$app/controllers/index.js";
-
-import { superuser } from "$app/middlewares/index.js";
+import {
+  roleSchema,
+  roleUpdateSchema,
+  roleParamsSchema,
+} from "$app/validations/index.js";
+import { superuser, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
 router.use(superuser);
 
 router.get("/", Role.ALL);
-router.post("/", Role.CREATE);
-router.get("/:id", Role.SINGLE);
-router.delete("/:id", Role.DELETE);
-router.patch("/:id", Role.UPDATE);
+router.post("/", validate({ bodySchema: roleSchema }), Role.CREATE);
+router.get("/:id", validate({ paramsSchema: roleParamsSchema }), Role.SINGLE);
+router.delete(
+  "/:id",
+  validate({ paramsSchema: roleParamsSchema }),
+  Role.DELETE
+);
+router.patch(
+  "/:id",
+  validate({ bodySchema: roleUpdateSchema, paramsSchema: roleParamsSchema }),
+  Role.UPDATE
+);
 
 export default router;
