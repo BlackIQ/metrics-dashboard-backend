@@ -1,45 +1,101 @@
 import { User, Role, Permission } from "$app/models/index.js";
+import logger from "$app/log/index.js";
+
 import md5 from "md5";
+
+export const ALL = async (req, res) => {
+  try {
+    const { page, limit } = req.query;
+
+    const users = await User.find()
+      .populate({
+        path: "role",
+        model: Role,
+        populate: {
+          path: "permissions",
+          model: Permission,
+          select: "label value",
+        },
+      })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await User.countDocuments();
+
+    logger.info("Users fetched", {
+      context: "user",
+      userId: req.user.id,
+      page,
+      limit,
+      total,
+    });
+
+    return res.status(200).json({
+      message: "Users fetched",
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    logger.error("Users fetch failed", {
+      context: "user",
+      error: error.message,
+      stack: error.stack,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
 
 export const SINGLE = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await User.findOne({ _id: id }).populate({
-      path: "role",
-      model: Role,
-      populate: {
-        path: "permissions",
-        model: Permission,
-        select: "label value",
-      },
-    });
+    const user = await User.findById(id)
+      .populate({
+        path: "role",
+        model: Role,
+        populate: {
+          path: "permissions",
+          model: Permission,
+          select: "label value",
+        },
+      })
+      .lean();
 
     if (!user) {
-      return res.status(404).json({ message: "User did not found" });
+      logger.warn("User not found", {
+        context: "user",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
+      return res.status(404).json({ message: "User not found" });
     }
 
-    return res.status(200).json({ message: "User found", user });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-export const ALL = async (req, res) => {
-  try {
-    const users = await User.find().populate({
-      path: "role",
-      model: Role,
-      populate: {
-        path: "permissions",
-        model: Permission,
-        select: "label value",
-      },
+    logger.info("User retrieved", {
+      context: "user",
+      resourceId: id,
+      userId: req.user.id,
     });
 
-    return res.status(200).json({ message: "Data fetched", users });
+    return res.status(200).json({ message: "User retrieved", user });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("User retrieval failed", {
+      context: "user",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to retrieve user" });
   }
 };
 
@@ -48,19 +104,43 @@ export const UPDATE = async (req, res) => {
   const data = req.body;
 
   try {
-    const user = await User.findOneAndUpdate(
-      { _id: id },
+    const user = await User.findByIdAndUpdate(
+      id,
       { $set: data },
       { new: true }
     );
 
     if (!user) {
-      return res.status(404).json({ message: "User did not found" });
+      logger.warn("User not found for update", {
+        context: "user",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
+      return res.status(404).json({ message: "User not found" });
     }
+
+    logger.info("User updated", {
+      context: "user",
+      resourceId: id,
+      userId: req.user.id,
+    });
 
     return res.status(200).json({ message: "User updated", user });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("User update failed", {
+      context: "user",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "Email already exists" });
+    }
+
+    return res.status(500).json({ message: "Failed to update user" });
   }
 };
 
@@ -68,37 +148,77 @@ export const DELETE = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await User.findOneAndDelete({ _id: id });
+    const user = await User.findByIdAndDelete(id);
 
     if (!user) {
-      return res.status(404).json({ message: "User did not found" });
+      logger.warn("User not found for deletion", {
+        context: "user",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
+      return res.status(404).json({ message: "User not found" });
     }
 
-    return res.status(200).json({ message: "User deleted" });
+    logger.info("User deleted", {
+      context: "user",
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(204).json();
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("User deletion failed", {
+      context: "user",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to delete user" });
   }
 };
 
 export const CHANGE_PASSWORD = async (req, res) => {
   const { id } = req.params;
-  const data = req.body;
+  const { password } = req.body;
 
-  data.password = md5(data.password);
+  const hashedPassword = md5(password);
 
   try {
-    const user = await User.findOneAndUpdate(
-      { _id: id },
-      { $set: data },
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: { password: hashedPassword } },
       { new: true }
     );
 
     if (!user) {
-      return res.status(404).json({ message: "User did not found" });
+      logger.warn("User not found for password change", {
+        context: "user",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
+      return res.status(404).json({ message: "User not found" });
     }
+
+    logger.info("User password changed", {
+      context: "user",
+      resourceId: id,
+      userId: req.user.id,
+    });
 
     return res.status(200).json({ message: "User password changed", user });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    logger.error("Password change failed", {
+      context: "user",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to change password" });
   }
 };
