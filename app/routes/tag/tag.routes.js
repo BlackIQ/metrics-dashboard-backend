@@ -12,12 +12,13 @@ import {
   tagSchema,
   tagUpdateSchema,
   tagParamsSchema,
+  paginationSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", Tag.ALL);
+router.get("/", validate({ querySchema: paginationSchema }), Tag.ALL);
 router.post("/", validate({ bodySchema: tagSchema }), Tag.CREATE);
 router.get(
   "/:id",
