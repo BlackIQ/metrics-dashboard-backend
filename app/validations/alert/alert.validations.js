@@ -51,27 +51,21 @@ export const alertParamsSchema = Joi.object({
 });
 
 export const alertTestSchema = Joi.object({
-  type: Joi.string().valid("telegram", "email").required().messages({
-    "any.only": "Type must be either 'telegram' or 'email'",
+  type: Joi.string().valid("email", "telegram").required().messages({
+    "any.only": "Type must be either 'email' or 'telegram'",
     "any.required": "Type is required",
   }),
   config: Joi.object({
     chatID: Joi.string().when("$type", {
       is: "telegram",
       then: Joi.required().messages({
-        "any.required": "chatID is required for Telegram test",
-      }),
-      otherwise: Joi.forbidden().messages({
-        "any.forbidden": "chatID is only allowed for Telegram",
+        "any.required": "chatID is required for Telegram alerts",
       }),
     }),
     botToken: Joi.string().when("$type", {
       is: "telegram",
       then: Joi.required().messages({
-        "any.required": "botToken is required for Telegram test",
-      }),
-      otherwise: Joi.forbidden().messages({
-        "any.forbidden": "botToken is only allowed for Telegram",
+        "any.required": "botToken is required for Telegram alerts",
       }),
     }),
     destinationEmail: Joi.string()
@@ -79,11 +73,8 @@ export const alertTestSchema = Joi.object({
       .when("$type", {
         is: "email",
         then: Joi.required().messages({
-          "any.required": "destinationEmail is required for Email test",
+          "any.required": "destinationEmail is required for Email alerts",
           "string.email": "destinationEmail must be a valid email address",
-        }),
-        otherwise: Joi.forbidden().messages({
-          "any.forbidden": "destinationEmail is only allowed for Email",
         }),
       }),
   })
