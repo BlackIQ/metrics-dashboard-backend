@@ -1,9 +1,11 @@
 import { Point } from "@influxdata/influxdb-client";
 
-import { Host } from "$app/models/index.js";
+import { Host, AgentAction } from "$app/models/index.js"; // Agent Action Model, imported
 import { influx } from "$app/connections/index.js";
 
 import { databaseConfig } from "$app/config/index.js";
+
+import logger from "$app/log/index.js"; // Logger, imported
 
 import axios from "axios";
 import chalk from "chalk";
