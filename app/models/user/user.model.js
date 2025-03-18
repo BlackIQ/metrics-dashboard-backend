@@ -23,11 +23,6 @@ export const schemaModel = {
     unique: true,
     match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
-  rayid: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   isConfirmed: {
     type: Boolean,
     default: false,
@@ -42,6 +37,5 @@ export const schemaModel = {
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });
 
 schema.index({ email: 1 }, { unique: true });
-schema.index({ rayid: 1 }, { unique: true });
 
 export default mongo.model("User", schema);
