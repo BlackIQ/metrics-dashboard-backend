@@ -12,4 +12,4 @@ export const paginationSchema = Joi.object({
     "number.min": "Limit must be at least 1",
     "number.max": "Limit cannot exceed 100",
   }),
-}).unknown(true); // TODO: Remove undown
+});
