@@ -4,6 +4,9 @@ import { User, Role } from "$app/models/index.js";
 // Logger
 import logger from "$app/log/index.js";
 
+// Config
+import { appConfig } from "$app/config/index.js";
+
 // Utils
 import {
   sendEmail,
@@ -11,8 +14,12 @@ import {
   generateSecureValue,
 } from "$app/utils/index.js";
 
+// Connections
+import { redis as Redis } from "$app/connections/index.js";
+
 // Libs
 import md5 from "md5";
+import jwt from "jsonwebtoken";
 
 export const LOGIN = async (req, res) => {
   const { email, password } = req.body;
@@ -84,17 +91,17 @@ export const REGISTER = async (req, res) => {
       ...data,
       password: md5(data.password),
       role: data.role || userRole._id,
-      rayid,
       isConfirmed: false,
     };
 
     const user = await User.create(newUser);
+    await Redis.setex(`confirm:${rayid}`, 24 * 60 * 60, user._id.toString());
 
     const confirmEmailContent = `
       <p style="font-size: 18px; color: #00FFFF;">Welcome to OpenHubble Cloud! 🔭</p>
       <p> </p>
       <p>You're one step away from diving into your OpenHubble Cloud panel.</p>
-      <p>Click below to confirm your email and get started:</p>
+      <p>This link expires in 24 hours—click below to confirm:</p>
       <p style="margin: 20px 0;">
         <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
@@ -102,11 +109,9 @@ export const REGISTER = async (req, res) => {
         </a>
       </p>
       <p> </p>
-      <p>If the button doesn’t work, copy and paste this link into your browser:</p>
-      <p><a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
         https://cloud.openhubble.com/auth/confirm?rayid=${rayid}
       </a></p>
-      <p> </p>
       <p>Ready to explore? 🚀</p>
     `;
 
@@ -123,7 +128,8 @@ export const REGISTER = async (req, res) => {
     });
 
     return res.status(201).json({
-      message: "User created. Please check your email to confirm.",
+      message:
+        "User created. Check your email to confirm (expires in 24 hours).",
     });
   } catch (error) {
     logger.error("Registration failed", {
@@ -141,20 +147,36 @@ export const CONFIRM = async (req, res) => {
   const { rayid } = req.body;
 
   try {
-    const user = await User.findOneAndUpdate(
-      { rayid },
-      { $set: { isConfirmed: true, rayid: null } },
-      { new: true }
-    );
+    const userId = await Redis.get(`confirm:${rayid}`);
 
-    if (!user) {
-      logger.warn("Confirmation failed - invalid rayid", {
+    if (!userId) {
+      logger.warn("Confirmation failed - invalid or expired rayid", {
         context: "auth",
         rayid,
       });
 
-      return res.status(400).json({ message: "Invalid or expired token" });
+      return res
+        .status(400)
+        .json({ message: "Confirmation link invalid or expired" });
     }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { isConfirmed: true } },
+      { new: true }
+    );
+
+    if (!user) {
+      logger.error("Confirmation failed - user not found", {
+        context: "auth",
+        rayid,
+        userId,
+      });
+
+      return res.status(500).json({ message: "User not found" });
+    }
+
+    await Redis.del(`confirm:${rayid}`);
 
     const token = createToken({ id: user._id });
 
@@ -162,18 +184,15 @@ export const CONFIRM = async (req, res) => {
       <p style="font-size: 18px; color: #00FFFF;">You’re In! Welcome to OpenHubble Cloud! 🔭</p>
       <p> </p>
       <p>Congratulations, ${user.firstName}!</p>
-      <p>Your email is confirmed, and the universe of data insights is now at your fingertips.</p>
-      <p> </p>
-      <p>Get ready to explore, analyze, and uncover hidden gems with OpenHubble Cloud.</p>
+      <p>Your email is confirmed—dive into the universe of data insights!</p>
       <p style="margin: 20px 0;">
         <a href="https://cloud.openhubble.com/panel" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
           Dive Into Your Panel
         </a>
       </p>
-      <p> </p>
-      <p>Need help? Reach out anytime at <a href="mailto:support@openhubble.com" style="color: #00FFFF;">support@openhubble.com</a>.</p>
-      <p>Let’s make some cosmic discoveries together! 🚀</p>
+      <p>Need help? <a href="mailto:support@openhubble.com" style="color: #00FFFF;">support@openhubble.com</a></p>
+      <p>Let’s make cosmic discoveries! 🚀</p>
     `;
 
     await sendEmail(
@@ -188,11 +207,7 @@ export const CONFIRM = async (req, res) => {
       email: user.email,
     });
 
-    return res.status(200).json({
-      message: "Welcome",
-      token,
-      user,
-    });
+    return res.status(200).json({ message: "Welcome", token, user });
   } catch (error) {
     logger.error("Confirmation failed", {
       context: "auth",
@@ -202,5 +217,116 @@ export const CONFIRM = async (req, res) => {
     });
 
     return res.status(500).json({ message: "Failed to confirm" });
+  }
+};
+
+export const RESEND_CONFIRM = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      logger.warn("Resend confirm failed - email not found", {
+        context: "auth",
+        email,
+      });
+
+      return res.status(404).json({ message: "Email not registered" });
+    }
+
+    if (user.isConfirmed) {
+      logger.info("Resend confirm skipped - already confirmed", {
+        context: "auth",
+        email,
+      });
+
+      return res.status(400).json({ message: "Email already confirmed" });
+    }
+
+    const rayid = generateSecureValue(50);
+
+    await Redis.setex(`confirm:${rayid}`, 24 * 60 * 60, user._id.toString());
+
+    const confirmEmailContent = `
+      <p style="font-size: 18px; color: #00FFFF;">OpenHubble Cloud Confirmation 🔭</p>
+      <p> </p>
+      <p>Here’s a new confirmation link for ${email}—it expires in 24 hours:</p>
+      <p style="margin: 20px 0;">
+        <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" 
+           style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
+          Confirm Now
+        </a>
+      </p>
+      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+        https://cloud.openhubble.com/auth/confirm?rayid=${rayid}
+      </a></p>
+      <p>Let’s get you exploring! 🚀</p>
+    `;
+
+    await sendEmail(
+      email,
+      "New OpenHubble Cloud Confirmation",
+      confirmEmailContent
+    );
+
+    logger.info("Confirmation resent", {
+      context: "auth",
+      userId: user._id.toString(),
+      email,
+    });
+
+    return res.status(200).json({ message: "New confirmation email sent" });
+  } catch (error) {
+    logger.error("Resend confirm failed", {
+      context: "auth",
+      error: error.message,
+      stack: error.stack,
+      email,
+    });
+
+    return res.status(500).json({ message: "Failed to resend confirmation" });
+  }
+};
+
+export const LOGOUT = async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    logger.warn("Logout failed - no token provided", { context: "auth" });
+
+    return res.status(400).json({ message: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, appConfig.secret);
+    const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
+
+    if (expiresIn <= 0) {
+      logger.info("Logout - token already expired", {
+        context: "auth",
+        userId: decoded.id,
+      });
+
+      return res.status(200).json({ message: "Already logged out" });
+    }
+
+    await Redis.setex(`blacklist:${token}`, expiresIn, "logged_out");
+
+    logger.info("User logged out - token blacklisted", {
+      context: "auth",
+      userId: decoded.id,
+    });
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    logger.error("Logout failed", {
+      context: "auth",
+      error: error.message,
+      stack: error.stack,
+      token: token.slice(0, 10) + "...",
+    });
+
+    return res.status(500).json({ message: "Failed to logout" });
   }
 };
