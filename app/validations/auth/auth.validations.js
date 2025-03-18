@@ -35,3 +35,10 @@ export const authConfirmSchema = Joi.object({
     "any.required": "RayID is required",
   }),
 });
+
+export const authResendConfirmSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Email must be a valid email address",
+    "any.required": "Email is required",
+  }),
+});
