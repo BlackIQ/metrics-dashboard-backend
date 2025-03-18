@@ -14,11 +14,16 @@ import {
   userPasswordSchema,
   paginationSchema,
 } from "$app/validations/index.js";
-import { userOwnership, validate } from "$app/middlewares/index.js";
+import { userOwnership, superuser, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", validate({ querySchema: paginationSchema }), User.ALL);
+router.get(
+  "/",
+  superuser,
+  validate({ querySchema: paginationSchema }),
+  User.ALL
+);
 router.get(
   "/:id",
   validate({ paramsSchema: userParamsSchema }),
