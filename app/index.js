@@ -4,6 +4,7 @@ import express from "express";
 // Libs
 import cors from "cors";
 import morgan from "morgan";
+import jwt from "jsonwebtoken";
 
 // Logger
 import logger from "$app/log/index.js";
@@ -15,7 +16,7 @@ import Routes from "$app/routes/index.js";
 import { appConfig } from "$app/config/index.js";
 
 // Middleware
-import { ratelimit } from "$app/middlewares/index.js";
+import { ratelimit, verifyToken } from "$app/middlewares/index.js";
 
 const app = express();
 
@@ -39,6 +40,8 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(express.json({ limit: "10kb" }));
 app.set("json spaces", 2);
 
+app.use(verifyToken);
+
 // Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
@@ -49,7 +52,7 @@ app.use((req, res, next) => {
     logger.info("Request processed", {
       context: "request",
       method: req.method,
-      path: req.path,
+      path: req.originalUrl,
       status: res.statusCode,
       duration: `${duration}ms`,
       userId: req.user?.id || "unauthenticated",
@@ -61,6 +64,7 @@ app.use((req, res, next) => {
   return next();
 });
 
+// Rate Limit
 app.use(ratelimit);
 
 // API

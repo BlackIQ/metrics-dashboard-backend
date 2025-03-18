@@ -7,7 +7,7 @@ import { redis as Redis } from "$app/connections/index.js";
 
 import logger from "$app/log/index.js";
 
-const jwt = async (req, res, next) => {
+export const jwt = async (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization) {
     return res.status(401).json({ message: "Authorization header missing" });
@@ -48,4 +48,21 @@ const jwt = async (req, res, next) => {
   }
 };
 
-export default jwt;
+export const verifyToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    req.user = null;
+
+    return next();
+  }
+  try {
+    const decoded = JWT.verify(token, appConfig.secret);
+
+    req.user = { id: decoded.id };
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
