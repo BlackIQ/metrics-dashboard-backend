@@ -1,6 +1,11 @@
 import JWT from "jsonwebtoken";
+
 import { User, Role } from "$app/models/index.js";
 import { appConfig } from "$app/config/index.js";
+
+import { redis as Redis } from "$app/connections/index.js";
+
+import logger from "$app/log/index.js";
 
 const jwt = async (req, res, next) => {
   const { authorization } = req.headers;
@@ -14,6 +19,17 @@ const jwt = async (req, res, next) => {
   }
 
   try {
+    const isBlacklisted = await Redis.get(`blacklist:${token}`);
+
+    if (isBlacklisted) {
+      logger.warn("Token blacklisted", {
+        context: "auth",
+        token: token.slice(0, 10) + "...",
+      });
+
+      return res.status(401).json({ message: "Token has been logged out" });
+    }
+
     const { id } = JWT.verify(token, appConfig.secret);
     const user = await User.findById(id)
       .select("_id role")
