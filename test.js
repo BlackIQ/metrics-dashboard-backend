@@ -8,11 +8,11 @@ import os from "os";
 
 app.listen(appConfig.port, () => {
   logger.info("App is running", {
-    context: "app", // Category: app lifecycle
-    port: appConfig.port, // Specific detail
-    env: appConfig.environment, // Environment
-    host: os.hostname(), // Server identifier
-    version: appConfig.version, // App version for tracking updates
+    context: "app",
+    port: appConfig.port,
+    env: appConfig.environment,
+    host: os.hostname(),
+    version: appConfig.version,
   });
 
   if (appConfig.environment === "production") {
