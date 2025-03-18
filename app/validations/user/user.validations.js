@@ -18,12 +18,32 @@ export const userSchema = Joi.object({
     "string.min": "Last name must be at least 1 character",
     "string.max": "Last name cannot exceed 50 characters",
   }),
+  role: Joi.string().hex().length(24).messages({
+    "string.hex": "Role must be a valid ObjectId",
+    "string.length": "Role must be 24 characters",
+    "any.required": "Role is required",
+  }),
 });
 
-export const userUpdateSchema = userSchema.fork(
-  ["email", "firstName", "lastName"],
-  (field) => field.optional()
-);
+export const userUpdateSchema = Joi.object({
+  email: Joi.string().email().messages({
+    "string.email": "Email must be a valid email address",
+    "any.required": "Email is required",
+  }),
+  firstName: Joi.string().min(1).max(50).allow("").messages({
+    "string.min": "First name must be at least 1 character",
+    "string.max": "First name cannot exceed 50 characters",
+  }),
+  lastName: Joi.string().min(1).max(50).allow("").messages({
+    "string.min": "Last name must be at least 1 character",
+    "string.max": "Last name cannot exceed 50 characters",
+  }),
+  role: Joi.string().hex().length(24).messages({
+    "string.hex": "Role must be a valid ObjectId",
+    "string.length": "Role must be 24 characters",
+    "any.required": "Role is required",
+  }),
+});
 
 export const userPasswordSchema = Joi.object({
   password: Joi.string().min(8).max(128).required().messages({
