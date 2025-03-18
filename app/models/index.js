@@ -12,5 +12,6 @@ import Host from "$app/models/host/host.model.js";
 import Tag from "$app/models/tag/tag.model.js";
 import Group from "$app/models/group/group.model.js";
 import Alert from "$app/models/alert/alert.model.js";
+import AgentAction from "$app/models/action/action.model.js";
 
-export { Role, User, Permission, Host, Tag, Group, Alert };
+export { Role, User, Permission, Host, Tag, Group, Alert, AgentAction };
