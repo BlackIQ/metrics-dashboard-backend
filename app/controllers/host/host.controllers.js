@@ -1,5 +1,5 @@
 // Models
-import { Host } from "$app/models/index.js";
+import { Host, AgentAction } from "$app/models/index.js";
 
 // Logger
 import logger from "$app/log/index.js";
@@ -216,15 +216,13 @@ export const CHECK = async (req, res) => {
       timeout: 5000,
     });
 
-    if (ping.message !== "pong") {
-      logger.warn("Host ping invalid", {
-        context: "host",
-        userId: req.user.id,
-        host: hostBaseUrl,
-      });
+    if (ping.message !== "pong") throw new Error("Ping response invalid");
 
-      return res.status(503).json({ message: "Host ping response invalid" });
-    }
+    await AgentAction.create({
+      host: host._id,
+      status: "active",
+      message: "Ping successful",
+    });
 
     logger.info("Host check successful", {
       context: "host",
@@ -234,18 +232,39 @@ export const CHECK = async (req, res) => {
 
     return res.status(200).json({ message: "Host is ok!" });
   } catch (error) {
+    await AgentAction.create({
+      host: host._id,
+      status: "unavailable",
+      message: error.message,
+    });
+
     logger.error("Host check failed", {
       context: "host",
       error: error.message,
-      stack: error.stack,
       userId: req.user.id,
-      host: `${host.ipCommunication ? host.ip : host.dns}:${host.port}`,
     });
 
-    if (error.code === "ECONNREFUSED" || error.code === "ETIMEDOUT") {
-      return res.status(503).json({ message: "Host is unreachable" });
-    }
+    return res.status(503).json({ message: "Host is unreachable" });
+  }
+};
 
-    return res.status(500).json({ message: "Failed to check host" });
+export const ACTIONS = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const actions = await AgentAction.find({ host: id })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .lean();
+
+    return res.status(200).json({ message: "Host actions fetched", actions });
+  } catch (error) {
+    logger.error("Host actions fetch failed", {
+      context: "host",
+      error: error.message,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to fetch actions" });
   }
 };

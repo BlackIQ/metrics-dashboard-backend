@@ -40,5 +40,11 @@ router.patch(
   Host.UPDATE
 );
 router.post("/check", validate({ bodySchema: hostCheckSchema }), Host.CHECK);
+router.get(
+  "/:id/actions",
+  validate({ paramsSchema: hostParamsSchema }),
+  resourceOwnership("Host"),
+  Host.ACTIONS
+);
 
 export default router;
