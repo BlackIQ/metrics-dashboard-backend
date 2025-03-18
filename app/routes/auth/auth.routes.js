@@ -12,6 +12,7 @@ import {
   authLoginSchema,
   authRegisterSchema,
   authConfirmSchema,
+  authResendConfirmSchema,
 } from "$app/validations/index.js";
 import { validate } from "$app/middlewares/index.js";
 
@@ -28,5 +29,11 @@ router.post(
   validate({ bodySchema: authConfirmSchema }),
   Auth.CONFIRM
 );
+router.post(
+  "/resend-confirm",
+  validate({ bodySchema: authResendConfirmSchema }),
+  Auth.RESEND_CONFIRM
+);
+router.post("/logout", Auth.LOGOUT);
 
 export default router;
