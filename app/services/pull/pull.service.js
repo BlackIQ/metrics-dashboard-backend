@@ -1,25 +1,24 @@
-import { Point } from "@influxdata/influxdb-client";
-
-import { Host, AgentAction } from "$app/models/index.js"; // Agent Action Model, imported
-import { influx } from "$app/connections/index.js";
-
-import { databaseConfig } from "$app/config/index.js";
-
-import logger from "$app/log/index.js"; // Logger, imported
-
 import axios from "axios";
-import chalk from "chalk";
+import { Host, AgentAction } from "$app/models/index.js";
+import { influx } from "$app/connections/index.js";
+import { databaseConfig } from "$app/config/index.js";
+import logger from "$app/log/index.js";
+import { Point } from "@influxdata/influxdb-client";
 
 const { influx: influxConfig } = databaseConfig;
 
 export const pullMetrics = async () => {
   try {
-    const hosts = await Host.find({ isActive: true });
-
+    const hosts = await Host.find({ isActive: true }).lean();
     if (hosts.length === 0) {
-      console.log("No active hosts found");
+      logger.warn("No active hosts found", { context: "pull" });
       return;
     }
+
+    logger.info("Starting metrics pull", {
+      context: "pull",
+      hostCount: hosts.length,
+    });
 
     const writeAPI = influx.getWriteApi(
       influxConfig.org,
@@ -31,33 +30,40 @@ export const pullMetrics = async () => {
       const hostBaseUrl = `http://${
         host.ipCommunication ? host.ip : host.dns
       }:${host.port}`;
-
       try {
         const { data: ping } = await axios.get(`${hostBaseUrl}/api/ping`, {
           timeout: 5000,
-          headers: {
-            "x-api-key": host.apiKey,
-          },
+          headers: { "x-api-key": host.apiKey },
         });
 
         if (ping.message !== "pong") {
           throw new Error("Ping response invalid");
         }
 
+        await AgentAction.create({
+          host: host._id,
+          status: "active",
+          message: "Agent ping successful",
+        });
+
         if (!host.agentAvailable) {
           await Host.updateOne(
             { _id: host._id },
             { $set: { agentAvailable: true } }
           );
+
+          logger.info("Host agent marked available", {
+            context: "pull",
+            hostId: host._id,
+            hostName: host.name,
+          });
         }
 
         const { data: hostData } = await axios.get(
           `${hostBaseUrl}/api/metrics`,
           {
             timeout: 5000,
-            headers: {
-              "x-api-key": host.apiKey,
-            },
+            headers: { "x-api-key": host.apiKey },
           }
         );
 
@@ -107,6 +113,7 @@ export const pullMetrics = async () => {
           .intField("packets_received", hostMetrics.network_io.packets_received)
           .timestamp(new Date());
 
+        // System Load
         const systemLoadPoint = new Point("host_system_load_metrics")
           .tag("host_id", String(host._id))
           .floatField("1_min", hostMetrics.system_load["1_min"])
@@ -118,15 +125,13 @@ export const pullMetrics = async () => {
           const { data: dockerData } = await axios.get(
             `${hostBaseUrl}/api/metrics/docker`,
             {
-              headers: {
-                "x-api-key": host.apiKey,
-              },
+              headers: { "x-api-key": host.apiKey },
             }
           );
 
           const dockerMetrics = dockerData.metrics;
 
-          dockerMetrics.forEach((container) => {
+          for (const container of dockerMetrics) {
             const {
               id,
               name,
@@ -138,15 +143,15 @@ export const pullMetrics = async () => {
               health,
               pids,
             } = container;
+            if (status === "exited") continue;
 
-            if (status === "exited") {
-              console.log(
-                chalk.yellow(`[Docker] Skipping exited container: ${name}`)
-              );
-              return; // Skip the container if it's exited
-            }
+            await AgentAction.create({
+              host: host._id,
+              status: "active",
+              message: `Docker container ${name} metrics fetched`,
+            });
 
-            // CPU Metrics for Docker container
+            // Docker Points
             const cpuPoint = new Point("docker_cpu_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -155,7 +160,6 @@ export const pullMetrics = async () => {
               .intField("cpu_usage", cpu.cpu_usage)
               .timestamp(new Date());
 
-            // Memory Metrics for Docker container
             const memoryPoint = new Point("docker_memory_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -165,7 +169,6 @@ export const pullMetrics = async () => {
               .intField("memory_usage", memory.memory_usage)
               .timestamp(new Date());
 
-            // Disk I/O Metrics for Docker container
             const diskIOPoint = new Point("docker_disk_io_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -174,7 +177,6 @@ export const pullMetrics = async () => {
               .intField("write_bytes", blkio_stats.write_bytes)
               .timestamp(new Date());
 
-            // Network Metrics for Docker container
             const networkPoint = new Point("docker_network_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -183,7 +185,6 @@ export const pullMetrics = async () => {
               .intField("tx_bytes", networks.eth0.tx_bytes)
               .timestamp(new Date());
 
-            // PID Metrics for Docker container
             const pidPoint = new Point("docker_pid_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -191,7 +192,6 @@ export const pullMetrics = async () => {
               .intField("pids", pids)
               .timestamp(new Date());
 
-            // Container Health and Status
             const statusPoint = new Point("docker_container_status")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -200,7 +200,6 @@ export const pullMetrics = async () => {
               .stringField("health", health)
               .timestamp(new Date());
 
-            // Write all Docker container points
             writeAPI.writePoint(cpuPoint);
             writeAPI.writePoint(memoryPoint);
             writeAPI.writePoint(diskIOPoint);
@@ -208,15 +207,16 @@ export const pullMetrics = async () => {
             writeAPI.writePoint(pidPoint);
             writeAPI.writePoint(statusPoint);
 
-            console.log(
-              chalk.green(
-                `[${new Date().toISOString()}] [Docker] Metrics successfully fetched for ${name}`
-              )
-            );
-          });
+            logger.info("Docker metrics fetched", {
+              context: "pull",
+              hostId: host._id,
+              containerId: id,
+              containerName: name,
+            });
+          }
         }
 
-        // Write all points
+        // Write host points
         writeAPI.writePoint(cpuPoint);
         writeAPI.writePoint(memoryPoint);
         writeAPI.writePoint(swapPoint);
@@ -224,57 +224,67 @@ export const pullMetrics = async () => {
         writeAPI.writePoint(networkRTPoint);
         writeAPI.writePoint(systemLoadPoint);
 
-        const now = new Date().toISOString();
-
-        console.log(
-          chalk.green(
-            `[${now}] [Host] Metrics successfully fetched from ${host.name}`
-          )
-        );
+        logger.info("Host metrics pull successful", {
+          context: "pull",
+          hostId: host._id,
+          hostName: host.name,
+        });
       } catch (error) {
-        const now = new Date().toISOString();
+        let errorMessage = error.message;
+        let errorStatus = "unavailable";
 
         if (axios.isAxiosError(error)) {
           if (error.response) {
-            console.log(
-              chalk.red(
-                `[${now}] Failed to fetch metrics from ${host.name} at ${hostBaseUrl} - Status: ${error.response.status}`
-              )
-            );
+            errorMessage = `Status ${error.response.status}: ${
+              error.response.data?.message || "Unknown error"
+            }`;
+            errorStatus = "error";
           } else if (error.request) {
-            console.log(
-              chalk.red(
-                `[${now}] Failed to fetch metrics from ${host.name} at ${hostBaseUrl} - No response`
-              )
-            );
-          } else {
-            console.log(
-              chalk.red(
-                `[${now}] Failed to fetch metrics from ${host.name} at ${hostBaseUrl} - Error: ${error.message}`
-              )
-            );
+            errorMessage = "No response from agent";
           }
-        } else {
-          console.log(
-            chalk.red(
-              `[${now}] Failed to fetch metrics from ${host.name} at ${hostBaseUrl} - Error: ${error.message}`
-            )
-          );
         }
+
+        await AgentAction.create({
+          host: host._id,
+          status: errorStatus,
+          message: errorMessage,
+        });
+
+        logger.error("Host metrics pull failed", {
+          context: "pull",
+          hostId: host._id,
+          hostName: host.name,
+          error: errorMessage,
+          stack: error.stack,
+        });
 
         if (host.agentAvailable) {
           await Host.updateOne(
             { _id: host._id },
             { $set: { agentAvailable: false } }
           );
+
+          logger.info("Host agent marked unavailable", {
+            context: "pull",
+            hostId: host._id,
+            hostName: host.name,
+          });
         }
       }
     });
 
     await Promise.all(tasks);
-
     await writeAPI.flush();
+
+    logger.info("Metrics pull completed", {
+      context: "pull",
+      hostCount: hosts.length,
+    });
   } catch (error) {
-    console.error("Error in pullMetrics:", error.message);
+    logger.error("Pull metrics failed", {
+      context: "pull",
+      error: error.message,
+      stack: error.stack,
+    });
   }
 };
