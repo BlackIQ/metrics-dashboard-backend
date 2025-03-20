@@ -13,5 +13,18 @@ import Tag from "$app/models/tag/tag.model.js";
 import Group from "$app/models/group/group.model.js";
 import Alert from "$app/models/alert/alert.model.js";
 import AgentAction from "$app/models/action/action.model.js";
+import Trigger from "$app/models/trigger/trigger.model.js";
+import TriggerLog from "$app/models/triggerlog/triggerlog.model.js";
 
-export { Role, User, Permission, Host, Tag, Group, Alert, AgentAction };
+export {
+  Role,
+  User,
+  Permission,
+  Host,
+  Tag,
+  Group,
+  Alert,
+  AgentAction,
+  Trigger,
+  TriggerLog,
+};
