@@ -7,7 +7,7 @@ import { Point } from "@influxdata/influxdb-client";
 
 const { influx: influxConfig } = databaseConfig;
 
-export const pullMetrics = async () => {
+export const pullService = async () => {
   try {
     const hosts = await Host.find({ isActive: true }).lean();
     if (hosts.length === 0) {
