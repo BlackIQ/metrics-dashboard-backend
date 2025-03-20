@@ -1,13 +1,14 @@
-import cluster from "cluster";
-import os from "os";
 import { appConfig } from "$app/config/index.js";
 import logger from "$app/log/index.js";
 import app from "$app";
 
+import cluster from "cluster";
+import os from "os";
+
 const numCPUs = os.cpus().length;
 
 if (cluster.isPrimary) {
-  logger.info("Starting cluster", {
+  logger.info("Starting API cluster", {
     context: "cluster",
     cores: numCPUs,
     pid: process.pid,
@@ -18,25 +19,24 @@ if (cluster.isPrimary) {
   }
 
   cluster.on("online", (worker) => {
-    logger.info("Worker online", {
+    logger.info("API worker online", {
       context: "cluster",
       workerPid: worker.process.pid,
     });
   });
 
   cluster.on("exit", (worker, code, signal) => {
-    logger.warn("Worker exited", {
+    logger.warn("API worker exited", {
       context: "cluster",
       workerPid: worker.process.pid,
       code,
       signal,
     });
-    
     cluster.fork();
   });
 } else {
   app.listen(appConfig.port, () => {
-    logger.info("App is running", {
+    logger.info("App is running (clustered)", {
       context: "app",
       port: appConfig.port,
       env: appConfig.environment,
