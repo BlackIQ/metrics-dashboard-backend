@@ -2,13 +2,15 @@
   "name": "openhubble-cloud-api",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.js",
+  "main": "api-cluster.js",
   "private": true,
   "author": "Amirhossein Mohammadi",
   "scripts": {
-    "test": "link-module-alias && nodemon test.js",
+    "dev": "link-module-alias && nodemon api-single.js",
+    "start": "link-module-alias && node api-cluster.js",
+    "worker": "link-module-alias && node event-worker.js",
+    "start:all": "npm run start & npm run worker",
     "build": "node_modules/babel-cli/bin/babel.js ./ --source-maps --out-dir dist",
-    "start": "link-module-alias && node server.js",
     "populate": "node_modules/babel-cli/bin/babel-node.js populate.js",
     "postinstall": "link-module-alias"
   },
