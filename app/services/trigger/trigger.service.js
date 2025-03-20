@@ -38,6 +38,7 @@ export const triggerService = async () => {
         const condition = trigger.query[queryKey];
 
         const value = queryKey.split(".").reduce((obj, k) => obj?.[k], metrics);
+
         const matches =
           value !== undefined &&
           (("$gt" in condition && value > condition.$gt) ||
@@ -52,12 +53,13 @@ export const triggerService = async () => {
         if (matches && !state && trigger.resolution === "problem") {
           await redisState.set(key, "active", "EX", 24 * 60 * 60);
 
-          const relevantMetrics = { [queryKey]: value };
+          const relevantMetrics = value;
 
           triggerLogs.push({
             trigger: trigger._id,
             host: hostId,
             metrics: relevantMetrics,
+            message: trigger.message,
           });
 
           logger.warn("Trigger fired", {
@@ -65,7 +67,7 @@ export const triggerService = async () => {
             hostId,
             triggerId: trigger._id,
             message: trigger.message,
-            metrics: relevantMetrics,
+            metrics: { [queryKey]: value },
           });
 
           await redisPub.publish(
@@ -77,23 +79,23 @@ export const triggerService = async () => {
             })
           );
         } else if (!matches && state && trigger.resolution === "resolved") {
+          await redisState.del(key);
+
+          const relevantMetrics = value;
+
           triggerLogs.push({
             trigger: trigger._id,
             host: hostId,
-            metrics,
+            metrics: relevantMetrics,
             message: trigger.message,
           });
-
-          await redisState.del(key);
-
-          const relevantMetrics = { [queryKey]: value };
 
           logger.info("Trigger resolved", {
             context: "trigger",
             hostId,
             triggerId: trigger._id,
             message: trigger.message,
-            metrics: relevantMetrics,
+            metrics: { [queryKey]: value },
           });
 
           await redisPub.publish(
@@ -109,7 +111,6 @@ export const triggerService = async () => {
 
       if (triggerLogs.length) {
         await TriggerLog.insertMany(triggerLogs, { ordered: false });
-
         logger.debug("Trigger logs recorded", {
           context: "trigger",
           count: triggerLogs.length,
