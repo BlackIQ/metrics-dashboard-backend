@@ -18,10 +18,6 @@ export const schemaModel = {
     type: Object,
     required: true,
   },
-  message: {
-    type: String,
-    required: true,
-  },
 };
 
 export const schema = new mongooseSchema(schemaModel, { timestamps: true });

@@ -8,5 +8,20 @@ import * as Tag from "$app/controllers/tag/tag.controllers.js";
 import * as Group from "$app/controllers/group/group.controllers.js";
 import * as Ping from "$app/controllers/ping/ping.controllers.js";
 import * as Alert from "$app/controllers/alert/alert.controllers.js";
+import * as Trigger from "$app/controllers/trigger/trigger.controllers.js";
+import * as TriggerLog from "$app/controllers/triggerlog/triggerlog.controllers.js";
 
-export { Auth, Permission, Role, User, Host, Metric, Tag, Group, Ping, Alert };
+export {
+  Auth,
+  Permission,
+  Role,
+  User,
+  Host,
+  Metric,
+  Tag,
+  Group,
+  Ping,
+  Alert,
+  Trigger,
+  TriggerLog,
+};
