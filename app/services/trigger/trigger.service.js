@@ -1,6 +1,5 @@
 import { redis } from "$app/connections/index.js";
 import { Trigger, TriggerLog } from "$app/models/index.js";
-
 import logger from "$app/log/index.js";
 
 const redisSub = redis.duplicate();
@@ -35,44 +34,47 @@ export const triggerService = async () => {
 
       for (const trigger of triggers) {
         const key = `trigger:${hostId}:${trigger._id}`;
+        const queryKey = Object.keys(trigger.query)[0];
+        const condition = trigger.query[queryKey];
 
-        const matches = Object.entries(trigger.query).every(
-          ([key, condition]) => {
-            const value = metrics[key];
-            if (value === undefined) return false;
-            if ("$gt" in condition) return value > condition.$gt;
-            if ("$lt" in condition) return value < condition.$lt;
-            if ("$gte" in condition) return value >= condition.$gte;
-            if ("$lte" in condition) return value <= condition.$lte;
-            if ("$eq" in condition) return value === condition.$eq;
-            if ("$ne" in condition) return value !== condition.$ne;
-            return false;
-          }
-        );
+        const value = queryKey.split(".").reduce((obj, k) => obj?.[k], metrics);
+        const matches =
+          value !== undefined &&
+          (("$gt" in condition && value > condition.$gt) ||
+            ("$lt" in condition && value < condition.$lt) ||
+            ("$gte" in condition && value >= condition.$gte) ||
+            ("$lte" in condition && value <= condition.$lte) ||
+            ("$eq" in condition && value === condition.$eq) ||
+            ("$ne" in condition && value !== condition.$ne));
 
         const state = await redisState.get(key);
 
         if (matches && !state && trigger.resolution === "problem") {
+          await redisState.set(key, "active", "EX", 24 * 60 * 60);
+
+          const relevantMetrics = { [queryKey]: value };
+
           triggerLogs.push({
             trigger: trigger._id,
             host: hostId,
-            metrics,
-            message: trigger.message,
+            metrics: relevantMetrics,
           });
-
-          await redisState.set(key, "active", "EX", 24 * 60 * 60);
 
           logger.warn("Trigger fired", {
             context: "trigger",
             hostId,
             triggerId: trigger._id,
             message: trigger.message,
-            metrics,
+            metrics: relevantMetrics,
           });
 
           await redisPub.publish(
             "alerts:triggered",
-            JSON.stringify({ hostId, message: trigger.message, metrics })
+            JSON.stringify({
+              hostId,
+              message: trigger.message,
+              metrics: relevantMetrics,
+            })
           );
         } else if (!matches && state && trigger.resolution === "resolved") {
           triggerLogs.push({
@@ -84,17 +86,23 @@ export const triggerService = async () => {
 
           await redisState.del(key);
 
+          const relevantMetrics = { [queryKey]: value };
+
           logger.info("Trigger resolved", {
             context: "trigger",
             hostId,
             triggerId: trigger._id,
             message: trigger.message,
-            metrics,
+            metrics: relevantMetrics,
           });
 
           await redisPub.publish(
             "alerts:triggered",
-            JSON.stringify({ hostId, message: trigger.message, metrics })
+            JSON.stringify({
+              hostId,
+              message: trigger.message,
+              metrics: relevantMetrics,
+            })
           );
         }
       }
