@@ -46,7 +46,7 @@ export const ALL = async (req, res) => {
 };
 
 export const CREATE = async (req, res) => {
-  const data = req.body;
+  // const data = req.body;
 
   try {
     // const trigger = await Trigger.create(data);
@@ -63,13 +63,13 @@ export const CREATE = async (req, res) => {
     const defaultTriggers = [
       {
         resolution: "problem",
-        query: { "cpu.total_usage": { $gte: 10 } },
-        message: "CPU usage >= 10%",
+        query: { "cpu.total_usage": { $gte: 20 } },
+        message: "CPU usage >= 20%",
       },
       {
         resolution: "resolved",
-        query: { "cpu.total_usage": { $lt: 10 } },
-        message: "CPU usage back below 10%",
+        query: { "cpu.total_usage": { $lt: 20 } },
+        message: "CPU usage back below 20%",
       },
     ];
 

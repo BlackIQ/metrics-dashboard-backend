@@ -1,6 +1,7 @@
 import { redis } from "$app/connections/index.js";
-import { Trigger, TriggerLog } from "$app/models/index.js";
+import { Trigger, TriggerLog, Host, Alert } from "$app/models/index.js";
 import logger from "$app/log/index.js";
+import { sendEmail, sendTelegramMessage } from "$app/utils/index.js";
 
 const redisSub = redis.duplicate();
 const redisPub = redis.duplicate();
@@ -10,7 +11,6 @@ export const triggerService = async () => {
   logger.info("Starting trigger service", { context: "trigger" });
 
   const triggers = await Trigger.find({ isActive: true }).lean();
-
   logger.info("Loaded default triggers", {
     context: "trigger",
     count: triggers.length,
@@ -38,7 +38,6 @@ export const triggerService = async () => {
         const condition = trigger.query[queryKey];
 
         const value = queryKey.split(".").reduce((obj, k) => obj?.[k], metrics);
-
         const matches =
           value !== undefined &&
           (("$gt" in condition && value > condition.$gt) ||
@@ -52,7 +51,6 @@ export const triggerService = async () => {
 
         if (matches && !state && trigger.resolution === "problem") {
           await redisState.set(key, "active", "EX", 24 * 60 * 60);
-
           const relevantMetrics = value;
 
           triggerLogs.push({
@@ -80,7 +78,6 @@ export const triggerService = async () => {
           );
         } else if (!matches && state && trigger.resolution === "resolved") {
           await redisState.del(key);
-
           const relevantMetrics = value;
 
           triggerLogs.push({
@@ -111,10 +108,81 @@ export const triggerService = async () => {
 
       if (triggerLogs.length) {
         await TriggerLog.insertMany(triggerLogs, { ordered: false });
+
         logger.debug("Trigger logs recorded", {
           context: "trigger",
           count: triggerLogs.length,
         });
+
+        for (const triggerLog of triggerLogs) {
+          const host = await Host.findById(triggerLog.host).lean();
+
+          if (!host || !host.user) {
+            logger.warn("No user found for host", {
+              context: "trigger",
+              hostId: triggerLog.host,
+            });
+
+            continue;
+          }
+
+          const userId = host.user;
+
+          const alerts = await Alert.find({
+            user: userId,
+            isActive: true,
+          }).lean();
+
+          for (const alert of alerts) {
+            if (alert.type === "email") {
+              // const emailContent = `
+              //   OpenHubble Cloud 🔭
+
+              //   Host: ${host.name}
+              //   Alert: ${triggerLog.message}
+              //   Metric: ${metricText}
+              //   Time: ${new Date().toISOString()}
+              // `;
+
+              // await sendEmail(
+              //   alert.email,
+              //   `OpenHubble: ${triggerLog.message}`,
+              //   emailContent
+              // );
+
+              // logger.info("Email notification sent", {
+              //   context: "trigger",
+              //   userId,
+              //   hostId: triggerLog.host,
+              //   triggerId: triggerLog.trigger,
+              // });
+
+              console.log("Email");
+            } else if (alert.type === "telegram") {
+              const telegramMessage = [
+                "OpenHubble Cloud 🔭",
+                "",
+                `Host: ${host.name}`,
+                `Alert: ${triggerLog.message}`,
+                `Metric: ${triggerLog.metrics}`,
+                `Time: ${new Date().toISOString()}`,
+              ].join("\n");
+
+              await sendTelegramMessage(
+                alert.config.chatID,
+                alert.config.botToken,
+                telegramMessage
+              );
+
+              // logger.info("Telegram notification sent", {
+              //   context: "trigger",
+              //   userId,
+              //   hostId: triggerLog.host,
+              //   triggerId: triggerLog.trigger,
+              // });
+            }
+          }
+        }
       }
     } catch (error) {
       logger.error("Trigger processing failed", {
