@@ -1,4 +1,5 @@
 import axios from "axios";
+import { redis } from "$app/connections/index.js";
 import { Host, AgentAction } from "$app/models/index.js";
 import { influx } from "$app/connections/index.js";
 import { databaseConfig } from "$app/config/index.js";
@@ -36,9 +37,7 @@ export const pullService = async () => {
           headers: { "x-api-key": host.apiKey },
         });
 
-        if (ping.message !== "pong") {
-          throw new Error("Ping response invalid");
-        }
+        if (ping.message !== "pong") throw new Error("Ping response invalid");
 
         await AgentAction.create({
           host: host._id,
@@ -51,7 +50,6 @@ export const pullService = async () => {
             { _id: host._id },
             { $set: { agentAvailable: true } }
           );
-
           logger.info("Host agent marked available", {
             context: "pull",
             hostId: host._id,
@@ -66,10 +64,16 @@ export const pullService = async () => {
             headers: { "x-api-key": host.apiKey },
           }
         );
-
         const hostMetrics = hostData.metrics;
 
-        // CPU
+        await redis.publish(
+          "metrics:updates",
+          JSON.stringify({
+            hostId: host._id,
+            metrics: hostMetrics,
+          })
+        );
+
         const cpuPoint = new Point("host_cpu_metrics")
           .tag("host_id", String(host._id))
           .intField("total_cores", hostMetrics.cpu.total_cores)
@@ -77,7 +81,6 @@ export const pullService = async () => {
           .floatField("frequency_mhz", hostMetrics.cpu.frequency_mhz)
           .timestamp(new Date());
 
-        // Memory
         const memoryPoint = new Point("host_memory_metrics")
           .tag("host_id", String(host._id))
           .intField("total", hostMetrics.memory.total)
@@ -86,7 +89,6 @@ export const pullService = async () => {
           .floatField("percent", hostMetrics.memory.percent)
           .timestamp(new Date());
 
-        // Swap
         const swapPoint = new Point("host_swap_metrics")
           .tag("host_id", String(host._id))
           .intField("total", hostMetrics.swap.total)
@@ -95,7 +97,6 @@ export const pullService = async () => {
           .floatField("percent", hostMetrics.swap.percent)
           .timestamp(new Date());
 
-        // Disk I/O
         const diskIOPoint = new Point("host_disk_io_metrics")
           .tag("host_id", String(host._id))
           .intField("read_bytes", hostMetrics.disk_io.read_bytes)
@@ -104,7 +105,6 @@ export const pullService = async () => {
           .intField("write_count", hostMetrics.disk_io.write_count)
           .timestamp(new Date());
 
-        // Network RX/TX
         const networkRTPoint = new Point("host_network_io_metrics")
           .tag("host_id", String(host._id))
           .intField("bytes_sent", hostMetrics.network_io.bytes_sent)
@@ -113,7 +113,6 @@ export const pullService = async () => {
           .intField("packets_received", hostMetrics.network_io.packets_received)
           .timestamp(new Date());
 
-        // System Load
         const systemLoadPoint = new Point("host_system_load_metrics")
           .tag("host_id", String(host._id))
           .floatField("1_min", hostMetrics.system_load["1_min"])
@@ -128,21 +127,11 @@ export const pullService = async () => {
               headers: { "x-api-key": host.apiKey },
             }
           );
-
           const dockerMetrics = dockerData.metrics;
 
           for (const container of dockerMetrics) {
-            const {
-              id,
-              name,
-              cpu,
-              memory,
-              blkio_stats,
-              networks,
-              status,
-              health,
-              pids,
-            } = container;
+            const { id, name, cpu, memory, blkio_stats, networks, status } =
+              container;
             if (status === "exited") continue;
 
             await AgentAction.create({
@@ -151,7 +140,15 @@ export const pullService = async () => {
               message: `Docker container ${name} metrics fetched`,
             });
 
-            // Docker Points
+            await redis.publish(
+              "metrics:updates",
+              JSON.stringify({
+                hostId: host._id,
+                containerId: id,
+                metrics: { cpu, memory, blkio_stats, networks },
+              })
+            );
+
             const cpuPoint = new Point("docker_cpu_metrics")
               .tag("host_id", String(host._id))
               .tag("container_id", id)
@@ -189,7 +186,7 @@ export const pullService = async () => {
               .tag("host_id", String(host._id))
               .tag("container_id", id)
               .tag("container_name", name)
-              .intField("pids", pids)
+              .intField("pids", container.pids)
               .timestamp(new Date());
 
             const statusPoint = new Point("docker_container_status")
@@ -197,7 +194,7 @@ export const pullService = async () => {
               .tag("container_id", id)
               .tag("container_name", name)
               .stringField("status", status)
-              .stringField("health", health)
+              .stringField("health", container.health)
               .timestamp(new Date());
 
             writeAPI.writePoint(cpuPoint);
@@ -216,7 +213,6 @@ export const pullService = async () => {
           }
         }
 
-        // Write host points
         writeAPI.writePoint(cpuPoint);
         writeAPI.writePoint(memoryPoint);
         writeAPI.writePoint(swapPoint);
