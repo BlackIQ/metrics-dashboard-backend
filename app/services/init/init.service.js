@@ -1,15 +1,21 @@
-import { pullMetrics } from "$app/services/index.js";
-
+import { pullService, triggerService } from "$app/services/index.js";
 import logger from "$app/log/index.js";
-
 import { appConfig } from "$app/config/index.js";
 
 const POLL_INTERVAL = appConfig.pollInterval || 5000;
 
-export const startMetricsCollection = () => {
-  logger.info("Starting metrics collection", {
+export const startEventDriven = () => {
+  logger.info("Starting event-driven services", {
     context: "service",
     interval: POLL_INTERVAL,
+  });
+
+  triggerService().catch((error) => {
+    logger.error("Trigger service failed to start", {
+      context: "service",
+      error: error.message,
+      stack: error.stack,
+    });
   });
 
   let isRunning = false;
@@ -20,15 +26,12 @@ export const startMetricsCollection = () => {
       logger.debug("Metrics poll skipped - still running", {
         context: "service",
       });
-
       return;
     }
 
     isRunning = true;
-
     try {
-      await pullMetrics();
-
+      await pullService();
       logger.debug("Metrics poll completed", { context: "service" });
     } catch (error) {
       logger.error("Metrics collection failed", {
@@ -46,7 +49,6 @@ export const startMetricsCollection = () => {
   const stop = () => {
     if (intervalId) {
       clearInterval(intervalId);
-
       logger.info("Metrics collection stopped", { context: "service" });
     }
   };
