@@ -11,6 +11,7 @@ export const triggerService = async () => {
   logger.info("Starting trigger service", { context: "trigger" });
 
   const triggers = await Trigger.find({ isActive: true }).lean();
+
   logger.info("Loaded default triggers", {
     context: "trigger",
     count: triggers.length,
@@ -30,10 +31,10 @@ export const triggerService = async () => {
   redisSub.on("message", async (channel, message) => {
     try {
       const { hostId, metrics } = JSON.parse(message);
-      const triggerLogs = [];
 
       for (const trigger of triggers) {
         const key = `trigger:${hostId}:${trigger._id}`;
+        const problemKey = `${key}:problemId`; // Store problem log ID
         const queryKey = Object.keys(trigger.query)[0];
         const condition = trigger.query[queryKey];
 
@@ -53,7 +54,7 @@ export const triggerService = async () => {
           await redisState.set(key, "active", "EX", 24 * 60 * 60);
           const relevantMetrics = value;
 
-          triggerLogs.push({
+          const triggerLog = await TriggerLog.create({
             trigger: trigger._id,
             host: hostId,
             metrics: relevantMetrics,
@@ -76,11 +77,89 @@ export const triggerService = async () => {
               metrics: relevantMetrics,
             })
           );
+
+          await redisState.set(
+            problemKey,
+            triggerLog._id.toString(),
+            "EX",
+            24 * 60 * 60
+          );
+
+          const host = await Host.findById(triggerLog.host).lean();
+          if (!host || !host.user) {
+            logger.warn("No user found for host", {
+              context: "trigger",
+              hostId,
+            });
+            continue;
+          }
+
+          const userId = host.user;
+          const alerts = await Alert.find({
+            user: userId,
+            isActive: true,
+          }).lean();
+
+          for (const alert of alerts) {
+            const metricText = `${queryKey} = ${triggerLog.metrics}`;
+            const resolutionText = "New Problem";
+
+            if (alert.type === "email") {
+              // const emailContent = `
+              //   OpenHubble Cloud 🔭
+
+              //   Host: ${host.name}
+              //   Alert: ${triggerLog.message} (${resolutionText})
+              //   Metric: ${metricText}
+              //   Trigger Log ID: ${triggerLog._id}
+              //   Time: ${new Date().toISOString()}
+              // `;
+
+              // await sendEmail(
+              //   alert.email,
+              //   `OpenHubble: ${triggerLog.message} (${resolutionText})`,
+              //   emailContent
+              // );
+
+              // logger.info("Email notification sent", {
+              //   context: "trigger",
+              //   userId,
+              //   hostId: triggerLog.host,
+              //   triggerId: triggerLog.trigger,
+              //   triggerLogId: triggerLog._id,
+              // });
+              console.log("Email will implement (problem)");
+            } else if (alert.type === "telegram") {
+              const telegramMessage = [
+                "OpenHubble Cloud 🔭",
+                "",
+                `Host: ${host.name}`,
+                `Alert: ${triggerLog.message} (${resolutionText})`,
+                `Metric: ${metricText}`,
+                `Trigger Log ID: ${triggerLog._id}`,
+                `Time: ${new Date().toISOString()}`,
+              ].join("\n");
+
+              await sendTelegramMessage(
+                alert.config.chatID,
+                alert.config.botToken,
+                telegramMessage
+              );
+
+              logger.info("Telegram notification sent", {
+                context: "trigger",
+                userId,
+                hostId: triggerLog.host,
+                triggerId: triggerLog.trigger,
+                triggerLogId: triggerLog._id,
+              });
+            }
+          }
         } else if (!matches && state && trigger.resolution === "resolved") {
           await redisState.del(key);
           const relevantMetrics = value;
 
-          triggerLogs.push({
+          const triggerLog = await TriggerLog.create({
             trigger: trigger._id,
             host: hostId,
             metrics: relevantMetrics,
@@ -103,50 +182,45 @@ export const triggerService = async () => {
               metrics: relevantMetrics,
             })
           );
-        }
-      }
 
-      if (triggerLogs.length) {
-        await TriggerLog.insertMany(triggerLogs, { ordered: false });
+          const problemLogId = await redisState.get(problemKey);
+          await redisState.del(problemKey);
 
-        logger.debug("Trigger logs recorded", {
-          context: "trigger",
-          count: triggerLogs.length,
-        });
-
-        for (const triggerLog of triggerLogs) {
           const host = await Host.findById(triggerLog.host).lean();
-
           if (!host || !host.user) {
             logger.warn("No user found for host", {
               context: "trigger",
-              hostId: triggerLog.host,
+              hostId,
             });
-
             continue;
           }
 
           const userId = host.user;
-
           const alerts = await Alert.find({
             user: userId,
             isActive: true,
           }).lean();
 
           for (const alert of alerts) {
+            const metricText = `${queryKey} = ${triggerLog.metrics}`;
+            const resolutionText = problemLogId
+              ? `Resolved (Problem ID: ${problemLogId})`
+              : "Resolved";
+
             if (alert.type === "email") {
               // const emailContent = `
               //   OpenHubble Cloud 🔭
 
               //   Host: ${host.name}
-              //   Alert: ${triggerLog.message}
+              //   Alert: ${triggerLog.message} (${resolutionText})
               //   Metric: ${metricText}
+              //   Trigger Log ID: ${triggerLog._id}
               //   Time: ${new Date().toISOString()}
               // `;
 
               // await sendEmail(
               //   alert.email,
-              //   `OpenHubble: ${triggerLog.message}`,
+              //   `OpenHubble: ${triggerLog.message} (${resolutionText})`,
               //   emailContent
               // );
 
@@ -155,16 +229,19 @@ export const triggerService = async () => {
               //   userId,
               //   hostId: triggerLog.host,
               //   triggerId: triggerLog.trigger,
+              //   triggerLogId: triggerLog._id,
+              //   problemLogId,
               // });
 
-              console.log("Email");
+              console.log("Email will implement (resolve)");
             } else if (alert.type === "telegram") {
               const telegramMessage = [
                 "OpenHubble Cloud 🔭",
                 "",
                 `Host: ${host.name}`,
-                `Alert: ${triggerLog.message}`,
-                `Metric: ${triggerLog.metrics}`,
+                `Alert: ${triggerLog.message} (${resolutionText})`,
+                `Metric: ${metricText}`,
+                `Trigger Log ID: ${triggerLog._id}`,
                 `Time: ${new Date().toISOString()}`,
               ].join("\n");
 
@@ -174,12 +251,14 @@ export const triggerService = async () => {
                 telegramMessage
               );
 
-              // logger.info("Telegram notification sent", {
-              //   context: "trigger",
-              //   userId,
-              //   hostId: triggerLog.host,
-              //   triggerId: triggerLog.trigger,
-              // });
+              logger.info("Telegram notification sent", {
+                context: "trigger",
+                userId,
+                hostId: triggerLog.host,
+                triggerId: triggerLog.trigger,
+                triggerLogId: triggerLog._id,
+                problemLogId,
+              });
             }
           }
         }

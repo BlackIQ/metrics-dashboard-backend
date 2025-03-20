@@ -64,7 +64,7 @@ export const CREATE = async (req, res) => {
       {
         resolution: "problem",
         query: { "cpu.total_usage": { $gte: 20 } },
-        message: "CPU usage >= 20%",
+        message: "CPU usage is more than 20%",
       },
       {
         resolution: "resolved",
