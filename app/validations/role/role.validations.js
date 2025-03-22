@@ -13,10 +13,20 @@ export const roleSchema = Joi.object({
     "string.max": "Value cannot exceed 100 characters",
     "any.required": "Value is required",
   }),
+  permissions: Joi.array()
+    .items(Joi.string().hex().length(24))
+    .unique()
+    .messages({
+      "array.base": "Permissions must be an array",
+      "array.unique": "Duplicate permissions are not allowed",
+      "string.hex": "Each permission must be a valid ObjectId",
+      "string.length": "Each permission must be 24 characters",
+    }),
 });
 
-export const roleUpdateSchema = roleSchema.fork(["label", "value"], (field) =>
-  field.optional()
+export const roleUpdateSchema = roleSchema.fork(
+  ["label", "value", "permissions"],
+  (field) => field.optional()
 );
 
 export const roleParamsSchema = Joi.object({
