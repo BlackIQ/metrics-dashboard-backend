@@ -30,12 +30,11 @@ export const ALL = async (req, res) => {
   try {
     const userAlerts = await Alert.find({ user })
       .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
 
     const total = await Alert.countDocuments({ user });
 
-    const alertsWithStatus = baseAlerts.map((alert) => {
+    const allAlerts = baseAlerts.map((alert) => {
       const userAlert = userAlerts.find((ua) => ua.type === alert.identifier);
       return {
         ...alert,
@@ -51,6 +50,8 @@ export const ALL = async (req, res) => {
       };
     });
 
+    const paginatedAlerts = allAlerts.slice((page - 1) * limit, page * limit);
+
     logger.info("Alerts fetched", {
       context: "alert",
       userId: user,
@@ -61,7 +62,7 @@ export const ALL = async (req, res) => {
 
     return res.status(200).json({
       message: "User alert settings",
-      alerts: alertsWithStatus,
+      alerts: paginatedAlerts,
       pagination: {
         page,
         limit,
