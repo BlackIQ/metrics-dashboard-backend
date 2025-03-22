@@ -11,9 +11,15 @@ const baseAlerts = [
   {
     name: "Telegram",
     identifier: "telegram",
+    type: "telegram",
     details: "Send alert via Telegram",
   },
-  { name: "Email", identifier: "email", details: "Get alerts using Email" },
+  {
+    name: "Email",
+    identifier: "email",
+    type: "email",
+    details: "Get alerts using Email",
+  },
   // { name: "Webhook", identifier: "webhook", details: "Send alert to your own custom API" },
 ];
 
@@ -40,7 +46,7 @@ export const ALL = async (req, res) => {
           : "non-exists",
         _id: userAlert ? userAlert._id : null,
         config: userAlert ? userAlert.config : null,
-        type: userAlert ? userAlert.type : null,
+        type: alert.type,
         user: userAlert ? userAlert.user : null,
       };
     });
