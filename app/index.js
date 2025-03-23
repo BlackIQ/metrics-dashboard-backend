@@ -4,7 +4,6 @@ import express from "express";
 // Libs
 import cors from "cors";
 import morgan from "morgan";
-import jwt from "jsonwebtoken";
 
 // Logger
 import logger from "$app/log/index.js";
