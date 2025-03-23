@@ -1,26 +1,16 @@
-// Firebase
-import { initializeApp } from "firebase/app";
+import admin from "firebase-admin";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
-// Authentication imports
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyCcpEGZ7zXjxAE1oxXcyDA-M6xDwfeyQb0",
-  authDomain: "openhubble-cloud.firebaseapp.com",
-  projectId: "openhubble-cloud",
-  storageBucket: "openhubble-cloud.firebasestorage.app",
-  messagingSenderId: "630599906091",
-  appId: "1:630599906091:web:e157d67c4ef29e38ac0b6e",
-  measurementId: "G-SGS0TFX63V",
-};
+const serviceAccountPath = join(
+  __dirname,
+  "openhubble-cloud-firebase-adminsdk-fbsvc-f7101b78d2.json"
+);
 
-// App
-const app = initializeApp(firebaseConfig);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccountPath),
+});
 
-// Authentication
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-
-// Exports
-export { app, auth, googleProvider };
+export default admin;
