@@ -9,6 +9,9 @@ export const authLoginSchema = Joi.object({
     "string.min": "Password must be at least 6 characters",
     "any.required": "Password is required",
   }),
+  remember: Joi.boolean().optional().default(false).messages({
+    "boolean.base": "Remember me must be true or false",
+  }),
 });
 
 export const authRegisterSchema = Joi.object({
