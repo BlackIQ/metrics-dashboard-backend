@@ -103,14 +103,14 @@ export const REGISTER = async (req, res) => {
       <p>You're one step away from diving into your OpenHubble Cloud panel.</p>
       <p>This link expires in 24 hours—click below to confirm:</p>
       <p style="margin: 20px 0;">
-        <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" 
+        <a href="https://cloud.openhubble.com/auth/confirm/account?rayid=${rayid}" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
           Confirm & Access Panel
         </a>
       </p>
       <p> </p>
-      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
-        https://cloud.openhubble.com/auth/confirm?rayid=${rayid}
+      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm/account?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+        https://cloud.openhubble.com/auth/confirm/account?rayid=${rayid}
       </a></p>
       <p>Ready to explore? 🚀</p>
     `;
@@ -253,13 +253,13 @@ export const RESEND_CONFIRM = async (req, res) => {
       <p> </p>
       <p>Here’s a new confirmation link for ${email}—it expires in 24 hours:</p>
       <p style="margin: 20px 0;">
-        <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" 
+        <a href="https://cloud.openhubble.com/auth/confirm/account?rayid=${rayid}" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600; text-shadow: none;">
           Confirm Now
         </a>
       </p>
-      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
-        https://cloud.openhubble.com/auth/confirm?rayid=${rayid}
+      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm/account?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+        https://cloud.openhubble.com/auth/confirm/account?rayid=${rayid}
       </a></p>
       <p>Let’s get you exploring! 🚀</p>
     `;
@@ -382,13 +382,13 @@ export const CHANGE_EMAIL = async (req, res) => {
       <p>You’ve requested to change your email to ${newEmail}.</p>
       <p>This link expires in 24 hours—click below to confirm:</p>
       <p style="margin: 20px 0;">
-        <a href="https://cloud.openhubble.com/auth/confirm-email-change?rayid=${rayid}" 
+        <a href="https://cloud.openhubble.com/auth/confirm/email?rayid=${rayid}" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600;">
           Confirm New Email
         </a>
       </p>
-      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm-email-change?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
-        https://cloud.openhubble.com/auth/confirm-email-change?rayid=${rayid}
+      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/confirm/email?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+        https://cloud.openhubble.com/auth/confirm/email?rayid=${rayid}
       </a></p>
       <p>Not you? Contact <a href="mailto:support@openhubble.com" style="color: #00FFFF;">support@openhubble.com</a>.</p>
       <p>Stay cosmic! 🚀</p>
@@ -539,13 +539,13 @@ export const FORGOT_PASSWORD = async (req, res) => {
       <p>We received a request to reset your password.</p>
       <p>This link expires in 1 hour—click below to reset:</p>
       <p style="margin: 20px 0;">
-        <a href="https://cloud.openhubble.com/auth/reset-password?rayid=${rayid}" 
+        <a href="https://cloud.openhubble.com/auth/reset/password?rayid=${rayid}" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600;">
           Reset Password
         </a>
       </p>
-      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/reset-password?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
-        https://cloud.openhubble.com/auth/reset-password?rayid=${rayid}
+      <p>Or paste this: <a href="https://cloud.openhubble.com/auth/reset/password?rayid=${rayid}" style="color: #00FFFF; word-break: break-all;">
+        https://cloud.openhubble.com/auth/reset/password?rayid=${rayid}
       </a></p>
       <p>Not you? Contact <a href="mailto:support@openhubble.com" style="color: #00FFFF;">support@openhubble.com</a>.</p>
       <p>Stay cosmic! 🚀</p>
@@ -614,7 +614,7 @@ export const RESET_PASSWORD = async (req, res) => {
       <p style="font-size: 18px; color: #00FFFF;">Password Reset Complete! 🔭</p>
       <p>Your OpenHubble Cloud password has been updated.</p>
       <p style="margin: 20px 0;">
-        <a href="https://cloud.openhubble.com/auth/login" 
+        <a href="https://cloud.openhubble.com/auth" 
            style="background-color: #00FFFF; color: #1a1a1a; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 600;">
           Log In Now
         </a>
