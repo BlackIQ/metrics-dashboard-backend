@@ -1,7 +1,10 @@
+// Firebase
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
 
+// Authentication imports
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCcpEGZ7zXjxAE1oxXcyDA-M6xDwfeyQb0",
   authDomain: "openhubble-cloud.firebaseapp.com",
@@ -12,8 +15,12 @@ const firebaseConfig = {
   measurementId: "G-SGS0TFX63V",
 };
 
+// App
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const analytics = getAnalytics(app);
 
-export { app, auth, analytics };
+// Authentication
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+// Exports
+export { app, auth, googleProvider };
