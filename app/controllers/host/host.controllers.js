@@ -7,50 +7,63 @@ import logger from "$app/log/index.js";
 // Libs
 import axios from "axios";
 
-// export const ALL = async (req, res) => {
-//   const { page, limit } = req.query;
-//   const user = req.user.id;
+export const ALL = async (req, res) => {
+  const { page, limit } = req.query;
+  const user = req.user.id;
 
-//   try {
-//     const hosts = await Host.find({ user })
-//       .populate("user", "email firstName")
-//       .populate("groups", "label value")
-//       .populate("tags", "name value")
-//       .skip((page - 1) * limit)
-//       .limit(limit)
-//       .lean();
+  try {
+    const hosts = await Host.find({ user })
+      .populate("user", "email firstName")
+      .populate("groups", "label value")
+      .populate("tags", "name value")
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
 
-//     const total = await Host.countDocuments({ user });
+    const hostsWithLatestAction = await Promise.all(
+      hosts.map(async (host) => {
+        const latestAction = await AgentAction.findOne({ host: host._id })
+          .sort({ timestamp: -1 })
+          .lean();
 
-//     logger.info("Hosts fetched", {
-//       context: "host",
-//       userId: user,
-//       page,
-//       limit,
-//       total,
-//     });
+        return {
+          ...host,
+          latestActionMessage: latestAction ? latestAction.message : null,
+        };
+      })
+    );
 
-//     return res.status(200).json({
-//       message: "Hosts fetched",
-//       hosts,
-//       pagination: {
-//         page,
-//         limit,
-//         total,
-//         pages: Math.ceil(total / limit),
-//       },
-//     });
-//   } catch (error) {
-//     logger.error("Hosts fetch failed", {
-//       context: "host",
-//       error: error.message,
-//       stack: error.stack,
-//       userId: req.user.id,
-//     });
+    const total = await Host.countDocuments({ user });
 
-//     return res.status(500).json({ message: "Failed to fetch hosts" });
-//   }
-// };
+    logger.info("Hosts fetched", {
+      context: "host",
+      userId: user,
+      page,
+      limit,
+      total,
+    });
+
+    return res.status(200).json({
+      message: "Hosts fetched",
+      hosts: hostsWithLatestAction,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    logger.error("Hosts fetch failed", {
+      context: "host",
+      error: error.message,
+      stack: error.stack,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to fetch hosts" });
+  }
+};
 
 export const CREATE = async (req, res) => {
   const data = req.body;
@@ -289,65 +302,5 @@ export const ACTIONS = async (req, res) => {
     });
 
     return res.status(500).json({ message: "Failed to fetch hosts actions" });
-  }
-};
-
-export const ALL = async (req, res) => {
-  const { page, limit } = req.query;
-  const user = req.user.id;
-
-  try {
-    const hosts = await Host.find({ user })
-      .populate("user", "email firstName")
-      .populate("groups", "label value")
-      .populate("tags", "name value")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-
-    const hostsWithLatestAction = await Promise.all(
-      hosts.map(async (host) => {
-        const latestAction = await AgentAction.findOne({ host: host._id })
-          .sort({ timestamp: -1 })
-          .lean();
-
-        return {
-          ...host,
-          latestActionMessage: latestAction ? latestAction.message : null,
-        };
-      })
-    );
-
-    const total = await Host.countDocuments({ user });
-
-    logger.info("Hosts fetched with latest action", {
-      context: "host",
-      userId: user,
-      page,
-      limit,
-      total,
-    });
-
-    return res.status(200).json({
-      message: "Hosts fetched with latest action",
-      hosts: hostsWithLatestAction,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    logger.error("Hosts fetch with latest action failed", {
-      context: "host",
-      error: error.message,
-      stack: error.stack,
-      userId: req.user.id,
-    });
-
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch hosts and actions" });
   }
 };
