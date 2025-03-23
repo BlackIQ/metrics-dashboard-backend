@@ -23,7 +23,7 @@ export const ALL = async (req, res) => {
     const hostsWithLatestAction = await Promise.all(
       hosts.map(async (host) => {
         const latestAction = await AgentAction.findOne({ host: host._id })
-          .sort({ timestamp: -1 })
+          .sort({ createdAt: -1 })
           .lean();
 
         return {
