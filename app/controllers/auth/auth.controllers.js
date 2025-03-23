@@ -10,7 +10,7 @@ import { appConfig } from "$app/config/index.js";
 // Utils
 import {
   sendEmail,
-  createToken,
+  generateAuthToken,
   generateSecureValue,
 } from "$app/utils/index.js";
 
@@ -22,7 +22,7 @@ import md5 from "md5";
 import jwt from "jsonwebtoken";
 
 export const LOGIN = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, remember = false } = req.body;
 
   try {
     const user = await User.findOne({ email, password: md5(password) }).lean();
@@ -38,7 +38,7 @@ export const LOGIN = async (req, res) => {
         .json({ message: "Invalid credentials or unconfirmed email" });
     }
 
-    const token = createToken({ id: user._id });
+    const token = generateAuthToken({ id: user._id }, remember);
 
     logger.info("User logged in", {
       context: "auth",
@@ -178,7 +178,7 @@ export const CONFIRM = async (req, res) => {
 
     await Redis.del(`confirm:${rayid}`);
 
-    const token = createToken({ id: user._id });
+    const token = generateAuthToken({ id: user._id });
 
     const welcomeEmailContent = `
       <p style="font-size: 18px; color: #00FFFF;">You’re In! Welcome to OpenHubble Cloud! 🔭</p>
