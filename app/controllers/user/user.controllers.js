@@ -103,6 +103,52 @@ export const SINGLE = async (req, res) => {
   }
 };
 
+export const ME = async (req, res) => {
+  const { id } = req.user;
+
+  try {
+    const user = await User.findById(id)
+      .populate({
+        path: "role",
+        model: Role,
+        populate: {
+          path: "permissions",
+          model: Permission,
+          select: "label value",
+        },
+      })
+      .lean();
+
+    if (!user) {
+      logger.warn("Me not found", {
+        context: "user",
+        resourceId: id,
+        userId: req.user.id,
+      });
+
+      return res.status(404).json({ message: "Me not found" });
+    }
+
+    logger.info("Me retrieved", {
+      context: "user",
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(200).json({ message: "Me retrieved", user });
+  } catch (error) {
+    logger.error("Me retrieval failed", {
+      context: "user",
+      error: error.message,
+      stack: error.stack,
+      resourceId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(500).json({ message: "Failed to retrieve me" });
+  }
+};
+
 export const UPDATE = async (req, res) => {
   const { id } = req.params;
   const data = req.body;

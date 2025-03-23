@@ -24,6 +24,7 @@ router.get(
   validate({ querySchema: paginationSchema }),
   User.ALL
 );
+router.get("/me", userOwnership, User.ME);
 router.get(
   "/:id",
   validate({ paramsSchema: userParamsSchema }),
