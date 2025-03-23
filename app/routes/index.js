@@ -8,6 +8,7 @@
 import express from "express";
 
 import Auth from "$app/routes/auth/auth.routes.js";
+import OAuth from "$app/routes/auth/oauth.routes.js";
 import Permission from "$app/routes/permission/permission.routes.js";
 import Role from "$app/routes/role/role.routes.js";
 import User from "$app/routes/user/user.routes.js";
@@ -24,6 +25,7 @@ import { jwt } from "$app/middlewares/index.js";
 const router = express.Router();
 
 router.use("/auth", Auth);
+router.use("/oauth", OAuth);
 router.use("/permissions", jwt, Permission);
 router.use("/triggers", jwt, Trigger);
 router.use("/metrics", jwt, Metric);

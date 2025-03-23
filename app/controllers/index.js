@@ -1,4 +1,5 @@
 import * as Auth from "$app/controllers/auth/auth.controllers.js";
+import * as OAuth from "$app/controllers/auth/oauth.controllers.js";
 import * as Permission from "$app/controllers/permission/permission.controllers.js";
 import * as Role from "$app/controllers/role/role.controllers.js";
 import * as User from "$app/controllers/user/user.controllers.js";
@@ -13,6 +14,7 @@ import * as TriggerLog from "$app/controllers/triggerlog/triggerlog.controllers.
 
 export {
   Auth,
+  OAuth,
   Permission,
   Role,
   User,
