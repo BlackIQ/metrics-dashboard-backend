@@ -67,7 +67,7 @@ export const GOOGLE_LOGIN = async (req, res) => {
       });
     }
 
-    const token = generateAuthToken({ id: user._id });
+    const token = generateAuthToken({ id: user._id }, true);
 
     logger.info("Google user logged in", {
       context: "oauth",
@@ -152,7 +152,7 @@ export const GITHUB_LOGIN = async (req, res) => {
       });
     }
 
-    const token = generateAuthToken({ id: user._id });
+    const token = generateAuthToken({ id: user._id }, true);
 
     logger.info("GitHub user logged in", {
       context: "oauth",
@@ -177,9 +177,88 @@ export const GITHUB_LOGIN = async (req, res) => {
 };
 
 export const FACEBOOK_LOGIN = async (req, res) => {
-  return res
-    .status(501)
-    .json({ message: "Facebook login not implemented yet" });
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    logger.warn("Facebook login failed - no ID token provided", {
+      context: "oauth",
+    });
+
+    return res.status(400).json({ message: "ID token is required" });
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const { email, uid, name } = decodedToken;
+
+    let user = await User.findOne({
+      $or: [{ oauthId: uid, oauthProvider: "facebook" }, { email }],
+    });
+
+    if (!user) {
+      const userRole = await Role.findOne({ value: "user" });
+
+      if (!userRole) {
+        logger.error("Default user role not found", { context: "oauth" });
+
+        return res.status(500).json({ message: "Server configuration error" });
+      }
+
+      const [firstName, ...lastNameArr] = (name || "").split(" ");
+      const lastName = lastNameArr.join(" ");
+
+      user = await User.create({
+        email,
+        firstName: firstName || "",
+        lastName: lastName || "",
+        isConfirmed: true,
+        role: userRole._id,
+        oauthProvider: "facebook",
+        oauthId: uid,
+      });
+
+      logger.info("New Facebook user created", {
+        context: "oauth",
+        userId: user._id.toString(),
+        email,
+      });
+    } else if (!user.oauthProvider) {
+      user = await User.findByIdAndUpdate(
+        user._id,
+        { oauthProvider: "facebook", oauthId: uid },
+        { new: true }
+      );
+
+      logger.info("Facebook account linked to existing user", {
+        context: "oauth",
+        userId: user._id.toString(),
+        email,
+      });
+    }
+
+    const token = generateAuthToken({ id: user._id }, true);
+
+    logger.info("Facebook user logged in", {
+      context: "oauth",
+      userId: user._id.toString(),
+      email,
+    });
+
+    return res.status(200).json({
+      message: "Welcome",
+      token,
+      user: user.toObject(),
+    });
+  } catch (error) {
+    logger.error("Facebook login failed", {
+      context: "oauth",
+      error: error.message,
+      stack: error.stack,
+    });
+
+    return res.status(500).json({ message: "Failed to login with Facebook" });
+  }
 };
 
 export const MICROSOFT_LOGIN = async (req, res) => {
