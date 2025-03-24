@@ -23,22 +23,27 @@ const logger = winston.createLogger({
       collection: appConfig.environment === "production" ? "logs" : "dev-logs",
       level: "info",
       storeHost: true,
-      capped: true,
-      cappedSize: 10000000,
+      // capped: true,
+      // cappedSize: 10000000,
       tryReconnect: true,
     }),
     new winston.transports.File({
       filename: path.join(fileConfig.filePath, "app.log"),
       level: "info",
     }),
+  ],
+});
+
+if (appConfig.environment !== "production") {
+  transports.push(
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()
       ),
-    }),
-  ],
-});
+    })
+  );
+}
 
 logger.info("Logging initialized", { context: "startup" });
 
