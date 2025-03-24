@@ -6,11 +6,6 @@ export const graphSchema = Joi.object({
     "string.length": "Page ID must be 24 characters",
     "any.required": "Page ID is required",
   }),
-  user: Joi.string().hex().length(24).required().messages({
-    "string.hex": "User ID must be a valid ObjectId",
-    "string.length": "User ID must be 24 characters",
-    "any.required": "User ID is required",
-  }),
   host: Joi.string().hex().length(24).optional().messages({
     "string.hex": "Host ID must be a valid ObjectId",
     "string.length": "Host ID must be 24 characters",
@@ -48,26 +43,18 @@ export const graphSchema = Joi.object({
     "string.max": "Unit cannot exceed 20 characters",
   }),
   colors: Joi.object()
-    .pattern(Joi.string(), Joi.string().hex().length(7))
+    .pattern(Joi.string(), Joi.string().regex(/^#[0-9A-Fa-f]{6}$/))
     .optional()
     .messages({
       "object.pattern.match":
         "Colors must map field names to valid hex codes (e.g., #ff0000)",
+      "string.pattern.base":
+        "Each color value must be a valid hex code starting with # (e.g., #ff0000)",
     }),
 });
 
 export const graphUpdateSchema = graphSchema.fork(
-  [
-    "page",
-    "user",
-    "host",
-    "measurement",
-    "fields",
-    "title",
-    "chart",
-    "unit",
-    "colors",
-  ],
+  ["page", "host", "measurement", "fields", "title", "chart", "unit", "colors"],
   (field) => field.optional()
 );
 
