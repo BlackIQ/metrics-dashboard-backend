@@ -9,19 +9,12 @@ export const READ = async (req, res) => {
   const { start = "-1h", end = "now()" } = req.query;
 
   let queryMeasurements = "";
-
   const countMeasurements = measurements.length;
-  measurements.map((measurement, index) => {
-    const isLast = countMeasurements == index + 1;
-
+  measurements.forEach((measurement, index) => {
+    const isLast = countMeasurements === index + 1;
     queryMeasurements += `r._measurement == "${measurement}"`;
-
-    if (!isLast) {
-      queryMeasurements += " or ";
-    }
+    if (!isLast) queryMeasurements += " or ";
   });
-
-  //  (r._measurement == "system_load_metrics" or r._measurement == "cpu_metrics")
 
   try {
     const queryAPI = influx.getQueryApi(influxConfig.org);
@@ -33,13 +26,27 @@ export const READ = async (req, res) => {
           (${queryMeasurements}) 
           and r.host_id == "${host}"
         )
+        |> keep(columns: ["_time", "_value", "_field", "_measurement", "host_id"])
     `;
 
     const metrics = await queryAPI.collectRows(fluxQuery);
 
+    // Group data by measurement and field for a more compact structure
+    const formattedMetrics = {};
+    metrics.forEach(row => {
+      const { _measurement, _field, _time, _value } = row;
+      if (!formattedMetrics[_measurement]) {
+        formattedMetrics[_measurement] = {};
+      }
+      if (!formattedMetrics[_measurement][_field]) {
+        formattedMetrics[_measurement][_field] = [];
+      }
+      formattedMetrics[_measurement][_field].push({ time: _time, value: _value });
+    });
+
     const response = {
       message: "Data fetched successfully",
-      metrics,
+      metrics: formattedMetrics,
     };
 
     const responseSize = Buffer.byteLength(JSON.stringify(response), "utf8");
