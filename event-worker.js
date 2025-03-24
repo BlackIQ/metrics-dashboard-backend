@@ -1,4 +1,6 @@
-import { startEventDriven } from "$app/services/index.js";
+// Andromeda
+import { startEventDriven } from "$app/andromeda/index.js";
+
 import { appConfig } from "$app/config/index.js";
 import logger from "$app/log/index.js";
 
@@ -30,7 +32,7 @@ process.on("SIGINT", () => {
 
 process.on("SIGTERM", () => {
   stop();
-  
+
   logger.info("Event-driven worker stopped", {
     context: "worker",
     env: appConfig.environment,
@@ -39,6 +41,6 @@ process.on("SIGTERM", () => {
     pid: process.pid,
     signal: "SIGTERM",
   });
-  
+
   process.exit(0);
 });

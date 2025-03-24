@@ -1,4 +1,6 @@
-import { pullService, triggerService } from "$app/services/index.js";
+// Andromeda
+import { pullService, triggerService } from "$app/andromeda/index.js";
+
 import logger from "$app/log/index.js";
 import { appConfig } from "$app/config/index.js";
 
