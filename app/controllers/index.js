@@ -11,6 +11,8 @@ import * as Ping from "$app/controllers/ping/ping.controllers.js";
 import * as Alert from "$app/controllers/alert/alert.controllers.js";
 import * as Trigger from "$app/controllers/trigger/trigger.controllers.js";
 import * as TriggerLog from "$app/controllers/triggerlog/triggerlog.controllers.js";
+import * as Page from "$app/controllers/page/page.controllers.js";
+import * as Graph from "$app/controllers/graph/graph.controllers.js";
 
 export {
   Auth,
@@ -26,4 +28,6 @@ export {
   Alert,
   Trigger,
   TriggerLog,
+  Page,
+  Graph,
 };

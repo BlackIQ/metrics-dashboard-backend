@@ -8,3 +8,5 @@ export * from "$app/validations/user/user.validations.js";
 export * from "$app/validations/alert/alert.validations.js";
 export * from "$app/validations/trigger/trigger.validations.js";
 export * from "$app/validations/pagination/pagination.validations.js";
+export * from "$app/validations/page/page.validations.js";
+export * from "$app/validations/graph/graph.validations.js";

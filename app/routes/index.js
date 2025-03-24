@@ -19,6 +19,8 @@ import Group from "$app/routes/group/group.routes.js";
 import Ping from "$app/routes/ping/ping.routes.js";
 import Alert from "$app/routes/alert/alert.routes.js";
 import Trigger from "$app/routes/trigger/trigger.routes.js";
+import Page from "$app/routes/page/page.routes.js";
+import Graph from "$app/routes/graph/graph.routes.js";
 
 import { jwt } from "$app/middlewares/index.js";
 
@@ -35,6 +37,8 @@ router.use("/roles", jwt, Role);
 router.use("/users", jwt, User);
 router.use("/hosts", jwt, Host);
 router.use("/tags", jwt, Tag);
+router.use("/pages", jwt, Page);
+router.use("/graphs", jwt, Graph);
 router.use("/ping", Ping);
 
 export default router;

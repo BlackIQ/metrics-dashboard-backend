@@ -15,6 +15,8 @@ import Alert from "$app/models/alert/alert.model.js";
 import AgentAction from "$app/models/action/action.model.js";
 import Trigger from "$app/models/trigger/trigger.model.js";
 import TriggerLog from "$app/models/triggerlog/triggerlog.model.js";
+import Page from "$app/models/page/page.model.js";
+import Graph from "$app/models/graph/graph.model.js";
 
 export {
   Role,
@@ -27,4 +29,6 @@ export {
   AgentAction,
   Trigger,
   TriggerLog,
+  Page,
+  Graph,
 };
