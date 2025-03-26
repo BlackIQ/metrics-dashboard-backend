@@ -13,6 +13,7 @@ import { resourceOwnership } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.post("/:host", resourceOwnership("Host", "host"), Metric.READ);
+router.get("/keys/:host", Metric.GET_KEYS);
+router.post("/:host", resourceOwnership("Host", "host"), Metric.READ_METRICS);
 
 export default router;

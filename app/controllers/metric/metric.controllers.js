@@ -3,7 +3,7 @@ import { databaseConfig } from "$app/config/index.js";
 
 const { influx: influxConfig } = databaseConfig;
 
-export const READ = async (req, res) => {
+export const READ_METRICS = async (req, res) => {
   const { host } = req.params;
   const { measurements, fields } = req.body;
   const { start = "-1h", end = "now()" } = req.query;
@@ -87,5 +87,52 @@ export const READ = async (req, res) => {
     return res.status(200).json(response);
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+
+export const GET_KEYS = async (req, res) => {
+  const { host } = req.params;
+
+  try {
+    const queryAPI = influx.getQueryApi(influxConfig.org);
+
+    // Query measurements that contain the specified host_id
+    const measurementsQuery = `
+      from(bucket: "${influxConfig.bucket}")
+        |> range(start: -30d)  // Adjust time range as needed
+        |> filter(fn: (r) => r["host_id"] == "${host}")
+        |> keep(columns: ["_measurement"])
+        |> distinct(column: "_measurement")
+    `;
+
+    const measurements = await queryAPI.collectRows(measurementsQuery);
+    const measurementNames = measurements.map((row) => row._measurement);
+
+    const keysResult = {};
+
+    for (const measurement of measurementNames) {
+      const fieldsQuery = `
+        import "influxdata/influxdb/schema"
+        schema.measurementFieldKeys(
+          bucket: "${influxConfig.bucket}",
+          measurement: "${measurement}"
+        )
+      `;
+
+      const fields = await queryAPI.collectRows(fieldsQuery);
+      keysResult[measurement] = fields.map((row) => row._value);
+    }
+
+    const response = {
+      message: "Keys fetched successfully",
+      keys: keysResult,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching keys",
+      error: error.message,
+    });
   }
 };
