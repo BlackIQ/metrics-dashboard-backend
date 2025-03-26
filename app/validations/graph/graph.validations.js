@@ -59,9 +59,9 @@ export const graphUpdateSchema = graphSchema.fork(
 );
 
 export const graphParamsSchema = Joi.object({
-  id: Joi.string().hex().length(24).required().messages({
-    "string.hex": "ID must be a valid ObjectId",
-    "string.length": "ID must be 24 characters",
-    "any.required": "ID is required",
+  page: Joi.string().hex().length(24).required().messages({
+    "string.hex": "Page ID must be a valid ObjectId",
+    "string.length": "Page ID must be 24 characters",
+    "any.required": "Page ID is required",
   }),
 });

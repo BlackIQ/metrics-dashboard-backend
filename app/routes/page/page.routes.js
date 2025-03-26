@@ -12,13 +12,12 @@ import {
   pageSchema,
   pageUpdateSchema,
   pageParamsSchema,
-  paginationSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", validate({ querySchema: paginationSchema }), Page.ALL);
+router.get("/", Page.ALL);
 router.post("/", validate({ bodySchema: pageSchema }), Page.CREATE);
 router.get(
   "/:id",

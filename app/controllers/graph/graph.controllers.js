@@ -9,34 +9,22 @@ import { generateSecureValue } from "$app/utils/index.js";
 
 export const ALL = async (req, res) => {
   try {
-    const { page, limit } = req.query;
+    const { page } = req.params;
     const user = req.user.id;
 
-    const graphs = await Graph.find({ user })
+    const graphs = await Graph.find({ user, page })
       .populate("user", "email firstName")
-      .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
-
-    const total = await Graph.countDocuments({ user });
 
     logger.info("Graphs fetched", {
       context: "graph",
       userId: user,
       page,
-      limit,
-      total,
     });
 
     return res.status(200).json({
       message: "Graphs fetched",
       graphs,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     logger.error("Graphs fetch failed", {

@@ -9,34 +9,20 @@ import { generateSecureValue } from "$app/utils/index.js";
 
 export const ALL = async (req, res) => {
   try {
-    const { page, limit } = req.query;
     const user = req.user.id;
 
     const pages = await Page.find({ user })
       .populate("user", "email firstName")
-      .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
-
-    const total = await Page.countDocuments({ user });
 
     logger.info("Pages fetched", {
       context: "page",
       userId: user,
-      page,
-      limit,
-      total,
     });
 
     return res.status(200).json({
       message: "Pages fetched",
       pages,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     logger.error("Pages fetch failed", {

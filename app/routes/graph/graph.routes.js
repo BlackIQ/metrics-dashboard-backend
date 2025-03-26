@@ -12,13 +12,12 @@ import {
   graphSchema,
   graphUpdateSchema,
   graphParamsSchema,
-  paginationSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
 
 const router = express.Router();
 
-router.get("/", validate({ querySchema: paginationSchema }), Graph.ALL);
+router.get("/:page", validate({ paramsSchema: graphParamsSchema }), Graph.ALL);
 router.post("/", validate({ bodySchema: graphSchema }), Graph.CREATE);
 router.get(
   "/:id",
