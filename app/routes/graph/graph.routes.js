@@ -11,6 +11,7 @@ import { Graph } from "$app/controllers/index.js";
 import {
   graphSchema,
   graphUpdateSchema,
+  graphIdParamsSchema,
   graphParamsSchema,
 } from "$app/validations/index.js";
 import { resourceOwnership, validate } from "$app/middlewares/index.js";
@@ -33,7 +34,7 @@ router.delete(
 );
 router.patch(
   "/:id",
-  validate({ bodySchema: graphUpdateSchema, paramsSchema: graphParamsSchema }),
+  validate({ bodySchema: graphUpdateSchema, paramsSchema: graphIdParamsSchema }),
   resourceOwnership("Graph"),
   Graph.UPDATE
 );

@@ -37,11 +37,6 @@ export const graphSchema = Joi.object({
     "any.only": "Chart must be one of: AreaChart, LineChart, BarChart",
     "any.required": "Chart type is required",
   }),
-  unit: Joi.string().min(1).max(20).optional().messages({
-    "string.empty": "Unit cannot be empty",
-    "string.min": "Unit must be at least 1 character",
-    "string.max": "Unit cannot exceed 20 characters",
-  }),
   colors: Joi.object()
     .pattern(Joi.string(), Joi.string().regex(/^#[0-9A-Fa-f]{6}$/))
     .optional()
@@ -54,9 +49,17 @@ export const graphSchema = Joi.object({
 });
 
 export const graphUpdateSchema = graphSchema.fork(
-  ["page", "host", "measurement", "fields", "title", "chart", "unit", "colors"],
+  ["page", "host", "measurement", "fields", "title", "chart", "colors"],
   (field) => field.optional()
 );
+
+export const graphIdParamsSchema = Joi.object({
+  id: Joi.string().hex().length(24).required().messages({
+    "string.hex": "ID must be a valid ObjectId",
+    "string.length": "ID must be 24 characters",
+    "any.required": "ID is required",
+  }),
+});
 
 export const graphParamsSchema = Joi.object({
   page: Joi.string().hex().length(24).required().messages({
