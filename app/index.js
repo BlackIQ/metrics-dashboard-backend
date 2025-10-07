@@ -29,7 +29,7 @@ app.use(
 // Cors
 app.use(
   cors({
-    origin: ["https://cloud.openhubble.com", "http://localhost:3000"],
+    origin: ["https://console.openhubble.com", "https://cloud.openhubble.com", "http://localhost:3000"],
     methods: ["GET", "POST", "PATCH", "DELETE"],
   })
 );
