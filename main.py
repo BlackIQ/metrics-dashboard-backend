@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 
 # Application
-from routers import auth, user
+from routers import auth, group, page, tag, user
 
 # FastAPI Application
 app = FastAPI(
@@ -10,8 +10,11 @@ app = FastAPI(
     version="2.0.0",
     summary="BackEnd service of OpenHubble Metrics.",
     openapi_tags=[
-        {"name": "Authentication", "description": "OAuth2 Endpoints"},
-        {"name": "User", "description": "Manage your account"},
+        {"name": "Authentication", "description": "Authentication endpoints"},
+        {"name": "Group", "description": "Group endpoints"},
+        {"name": "Tag", "description": "Tag endpoints"},
+        {"name": "Page", "description": "Page endpoints"},
+        {"name": "User", "description": "User endpoints"},
     ],
     servers=[
         {"url": "http://127.0.0.1:8000", "description": "Development"},
@@ -22,4 +25,7 @@ app = FastAPI(
 
 # Routers
 app.include_router(auth.router, prefix="/api")  # Authentication
+app.include_router(group.router, prefix="/api")  # Group
+app.include_router(tag.router, prefix="/api")  # Tag
+app.include_router(page.router, prefix="/api")  # Page
 app.include_router(user.router, prefix="/api")  # User
