@@ -1,0 +1,65 @@
+# SQLAlchemy
+from sqlalchemy import Uuid, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+# UUID
+import uuid
+
+# Application
+from base import BaseModel  # Base
+
+
+# Host Model
+class Host(BaseModel):
+    __tablename__ = "hosts"
+
+    # Columns
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid.uuid4,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+    description: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+    ipv4: Mapped[str] = mapped_column(
+        nullable=True,
+    )
+    ipv6: Mapped[str] = mapped_column(
+        nullable=True,
+    )
+    dns: Mapped[str] = mapped_column(
+        nullable=True,
+    )
+    port: Mapped[int] = mapped_column(
+        nullable=False,
+    )
+    api_key: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+    communication: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+    agent_availability: Mapped[bool] = mapped_column(
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        nullable=False,
+    )
+
+    # Foreign Keys
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id"),
+        index=True,
+        nullable=False,
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="hosts",
+    )
