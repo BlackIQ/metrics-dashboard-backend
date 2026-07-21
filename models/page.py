@@ -20,7 +20,7 @@ class Page(BaseModel):
         default=uuid.uuid4,
         index=True,
     )
-    title: Mapped[str] = mapped_column(
+    name: Mapped[str] = mapped_column(
         nullable=False,
     )
     description: Mapped[str] = mapped_column(
