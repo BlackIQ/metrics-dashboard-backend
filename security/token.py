@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, timezone
 # JWT
 import jwt
 
+# UUID
+import uuid
+
 # Application
 from core.settings import settings  # Settings
 
@@ -12,11 +15,11 @@ SECRET = settings.secret
 ALGORITHM = settings.algorithm
 
 
-def create_token(user_id: int) -> str:
+def create_token(user_id: uuid.UUID) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=7)
 
     payload = {
-        "sub": str(user_id),
+        "sub": user_id,
         "exp": expire,
     }
 
