@@ -1,6 +1,6 @@
 # SQLAlchemy
 from sqlalchemy import Uuid
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # UUID
 import uuid
@@ -38,4 +38,22 @@ class User(BaseModel):
     )
     is_active: Mapped[bool] = mapped_column(
         nullable=False,
+    )
+
+    # Relationships
+    hosts: Mapped[list["Host"]] = relationship(
+        "Host",
+        back_populates="user",
+    )
+    groups: Mapped[list["Group"]] = relationship(
+        "Group",
+        back_populates="user",
+    )
+    tags: Mapped[list["Tag"]] = relationship(
+        "Tag",
+        back_populates="user",
+    )
+    pages: Mapped[list["Page"]] = relationship(
+        "Page",
+        back_populates="user",
     )
