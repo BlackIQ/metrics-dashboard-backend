@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 
 # Application
-from routers import auth, oauth, group, page, tag, user
+from routers import auth, oauth, host, group, page, tag, user
 
 # FastAPI Application
 app = FastAPI(
@@ -12,6 +12,7 @@ app = FastAPI(
     openapi_tags=[
         {"name": "Authentication", "description": "Authentication endpoints"},
         {"name": "OAuthentication", "description": "OAuthentication endpoints"},
+        {"name": "Host", "description": "Host endpoints"},
         {"name": "Group", "description": "Group endpoints"},
         {"name": "Tag", "description": "Tag endpoints"},
         {"name": "Page", "description": "Page endpoints"},
@@ -27,6 +28,7 @@ app = FastAPI(
 # Routers
 app.include_router(auth.router, prefix="/api")  # Authentication
 app.include_router(oauth.router, prefix="/api")  # OAuthentication
+app.include_router(host.router, prefix="/api")  # Group
 app.include_router(group.router, prefix="/api")  # Group
 app.include_router(tag.router, prefix="/api")  # Tag
 app.include_router(page.router, prefix="/api")  # Page
