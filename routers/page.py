@@ -32,6 +32,7 @@ async def list_pages(
         db.query(Page)
         .where(
             Page.user_id == user.id,
+            Page.deleted_at == None,
         )
         .all()
     )
@@ -45,21 +46,29 @@ async def get_page(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    page = db.get(Page, page_id)
+    db_page = (
+        db.query(Page)
+        .where(
+            Page.id == page_id,
+            Page.user_id == user.id,
+            Page.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
-    if not page:
+    if not db_page:
         raise HTTPException(
             status_code=404,
             detail="Page not found",
         )
 
-    if page.user_id is not user.id:
+    if db_page.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This page is not yours",
         )
 
-    return page
+    return db_page
 
 
 @router.post("", response_model=PageRead)
@@ -84,7 +93,15 @@ async def update_page(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_page = db.get(Page, page_id)
+    db_page = (
+        db.query(Page)
+        .where(
+            Page.id == page_id,
+            Page.user_id == user.id,
+            Page.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_page:
         raise HTTPException(
@@ -92,7 +109,7 @@ async def update_page(
             detail="Page not found",
         )
 
-    if db_page.user_id is not user.id:
+    if db_page.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This page is not yours",
@@ -113,7 +130,15 @@ async def delete_page(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_page = db.get(Page, page_id)
+    db_page = (
+        db.query(Page)
+        .where(
+            Page.id == page_id,
+            Page.user_id == user.id,
+            Page.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_page:
         raise HTTPException(
@@ -121,7 +146,7 @@ async def delete_page(
             detail="Page not found",
         )
 
-    if db_page.user_id is not user.id:
+    if db_page.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This page is not yours",
