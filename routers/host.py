@@ -32,6 +32,7 @@ async def list_hosts(
         db.query(Host)
         .where(
             Host.user_id == user.id,
+            Host.deleted_at == None,
         )
         .all()
     )
@@ -45,21 +46,29 @@ async def get_host(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    host = db.get(Host, host_id)
+    db_host = (
+        db.query(Host)
+        .where(
+            Host.id == host_id,
+            Host.user_id == user.id,
+            Host.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
-    if not host:
+    if not db_host:
         raise HTTPException(
             status_code=404,
             detail="Host not found",
         )
 
-    if host.user_id is not user.id:
+    if db_host.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This host is not yours",
         )
 
-    return host
+    return db_host
 
 
 @router.post("", response_model=HostRead)
@@ -84,7 +93,15 @@ async def update_host(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_host = db.get(Host, host_id)
+    db_host = (
+        db.query(Host)
+        .where(
+            Host.id == host_id,
+            Host.user_id == user.id,
+            Host.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_host:
         raise HTTPException(
@@ -92,7 +109,7 @@ async def update_host(
             detail="Host not found",
         )
 
-    if db_host.user_id is not user.id:
+    if db_host.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This host is not yours",
@@ -113,7 +130,15 @@ async def delete_host(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_host = db.get(Host, host_id)
+    db_host = (
+        db.query(Host)
+        .where(
+            Host.id == host_id,
+            Host.user_id == user.id,
+            Host.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_host:
         raise HTTPException(
@@ -121,7 +146,7 @@ async def delete_host(
             detail="Host not found",
         )
 
-    if db_host.user_id is not user.id:
+    if db_host.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This host is not yours",
