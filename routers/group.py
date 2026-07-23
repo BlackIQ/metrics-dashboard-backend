@@ -32,6 +32,7 @@ async def list_groups(
         db.query(Group)
         .where(
             Group.user_id == user.id,
+            Group.deleted_at == None,
         )
         .all()
     )
@@ -45,21 +46,29 @@ async def get_group(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    group = db.get(Group, group_id)
+    db_group = (
+        db.query(Group)
+        .where(
+            Group.id == group_id,
+            Group.user_id == user.id,
+            Group.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
-    if not group:
+    if not db_group:
         raise HTTPException(
             status_code=404,
             detail="Group not found",
         )
 
-    if group.user_id is not user.id:
+    if db_group.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This group is not yours",
         )
 
-    return group
+    return db_group
 
 
 @router.post("", response_model=GroupRead)
@@ -84,7 +93,15 @@ async def update_group(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_group = db.get(Group, group_id)
+    db_group = (
+        db.query(Group)
+        .where(
+            Group.id == group_id,
+            Group.user_id == user.id,
+            Group.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_group:
         raise HTTPException(
@@ -92,7 +109,7 @@ async def update_group(
             detail="Group not found",
         )
 
-    if db_group.user_id is not user.id:
+    if db_group.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This group is not yours",
@@ -113,7 +130,15 @@ async def delete_group(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_group = db.get(Group, group_id)
+    db_group = (
+        db.query(Group)
+        .where(
+            Group.id == group_id,
+            Group.user_id == user.id,
+            Group.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_group:
         raise HTTPException(
@@ -121,7 +146,7 @@ async def delete_group(
             detail="Group not found",
         )
 
-    if db_group.user_id is not user.id:
+    if db_group.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This group is not yours",
