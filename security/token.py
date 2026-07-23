@@ -19,7 +19,7 @@ def create_token(user_id: uuid.UUID) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=7)
 
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "exp": expire,
     }
 
