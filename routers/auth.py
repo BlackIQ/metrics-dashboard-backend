@@ -13,7 +13,7 @@ from models import User
 
 # Router
 router = APIRouter(
-    prefix="/oauth",
+    prefix="/auth",
     tags=["Authentication"],
 )
 

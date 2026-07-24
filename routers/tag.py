@@ -32,6 +32,7 @@ async def list_tags(
         db.query(Tag)
         .where(
             Tag.user_id == user.id,
+            Tag.deleted_at == None,
         )
         .all()
     )
@@ -45,21 +46,29 @@ async def get_tag(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tag = db.get(Tag, tag_id)
+    db_tag = (
+        db.query(Tag)
+        .where(
+            Tag.id == tag_id,
+            Tag.user_id == user.id,
+            Tag.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
-    if not tag:
+    if not db_tag:
         raise HTTPException(
             status_code=404,
             detail="Tag not found",
         )
 
-    if tag.user_id is not user.id:
+    if db_tag.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This tag is not yours",
         )
 
-    return tag
+    return db_tag
 
 
 @router.post("", response_model=TagRead)
@@ -84,7 +93,15 @@ async def update_tag(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_tag = db.get(Tag, tag_id)
+    db_tag = (
+        db.query(Tag)
+        .where(
+            Tag.id == tag_id,
+            Tag.user_id == user.id,
+            Tag.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_tag:
         raise HTTPException(
@@ -92,7 +109,7 @@ async def update_tag(
             detail="Tag not found",
         )
 
-    if db_tag.user_id is not user.id:
+    if db_tag.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This tag is not yours",
@@ -113,7 +130,15 @@ async def delete_tag(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_tag = db.get(Tag, tag_id)
+    db_tag = (
+        db.query(Tag)
+        .where(
+            Tag.id == tag_id,
+            Tag.user_id == user.id,
+            Tag.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
     if not db_tag:
         raise HTTPException(
@@ -121,7 +146,7 @@ async def delete_tag(
             detail="Tag not found",
         )
 
-    if db_tag.user_id is not user.id:
+    if db_tag.user_id != user.id:
         raise HTTPException(
             status_code=404,
             detail="This tag is not yours",

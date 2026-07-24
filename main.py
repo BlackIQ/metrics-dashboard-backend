@@ -1,5 +1,6 @@
 # FastAPI
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Application
 from routers import auth, oauth, host, group, page, tag, user
@@ -22,6 +23,15 @@ app = FastAPI(
         {"url": "http://127.0.0.1:8000", "description": "Development"},
         {"url": "https://metrics.openhubble.com/api", "description": "Production"},
     ],
+)
+
+# Cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
