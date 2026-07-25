@@ -29,9 +29,6 @@ class Host(BaseModel):
     ipv4: Mapped[str] = mapped_column(
         nullable=True,
     )
-    ipv6: Mapped[str] = mapped_column(
-        nullable=True,
-    )
     dns: Mapped[str] = mapped_column(
         nullable=True,
     )
@@ -45,9 +42,11 @@ class Host(BaseModel):
         nullable=False,
     )
     agent_availability: Mapped[bool] = mapped_column(
+        default=False,
         nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(
+        default=False,
         nullable=False,
     )
 
