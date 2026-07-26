@@ -15,7 +15,6 @@ class HostCreate(BaseSchema):
     name: str
     description: str
     ipv4: IPvAnyAddress
-    ipv6: IPvAnyAddress
     dns: str
     port: int
     api_key: str
@@ -28,7 +27,6 @@ class HostUpdate(BaseSchema):
     name: str | None = None
     description: str | None = None
     ipv4: IPvAnyAddress | None = None
-    ipv6: IPvAnyAddress | None = None
     dns: str | None = None
     port: int | None = None
     api_key: str | None = None

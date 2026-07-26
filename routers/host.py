@@ -77,7 +77,9 @@ async def create_host(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_host = Host(**host_data.model_dump(), user_id=user.id)
+    data = host_data.model_dump(exclude=["ipv4"])
+
+    db_host = Host(**data, ipv4=str(host_data.ipv4), user_id=user.id)
 
     db.add(db_host)
     db.commit()
