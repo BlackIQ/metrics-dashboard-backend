@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     secret: str = ""
     algorithm: str = ""
 
+    # Sentry
+    sentry_dsn: str = ""
+
     # Config Model
     model_config = SettingsConfigDict(env_file=".env")
 

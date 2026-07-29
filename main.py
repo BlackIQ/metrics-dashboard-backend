@@ -2,8 +2,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Sentry
+import sentry_sdk
+
 # Application
+from core.settings import settings  # Settings
 from routers import auth, oauth, host, group, page, tag, user
+
+# Init Sentry
+sentry_sdk.init(
+    dsn=settings.sentry_dsn,
+    send_default_pii=True,
+)
 
 # FastAPI Application
 app = FastAPI(
@@ -20,8 +30,14 @@ app = FastAPI(
         {"name": "User", "description": "User endpoints"},
     ],
     servers=[
-        {"url": "https://api.metrics.openhubble.com", "description": "Metrics Production Server"},
-        {"url": "http://127.0.0.1:8000", "description": "Development"},
+        {
+            "url": "https://api.metrics.openhubble.com",
+            "description": "Metrics Production Server",
+        },
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Development",
+        },
     ],
 )
 
