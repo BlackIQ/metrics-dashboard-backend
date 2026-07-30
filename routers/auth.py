@@ -9,7 +9,7 @@ from dependencies.database import get_db  # Get DB
 from security.password import hash_password, verify_password  # Password
 from security.token import create_token  # Token
 from schemas.auth import SigninSchema, SignupSchema, TokenSchema  # Schemas
-from models import User
+from models import User  # Models
 
 # Router
 router = APIRouter(
@@ -68,7 +68,7 @@ async def signin(
 ):
     user = db.query(User).where(User.email == data.email).first()
 
-    if user is None:
+    if user is None or user.password is None:
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password",
