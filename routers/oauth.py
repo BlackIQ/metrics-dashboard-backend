@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 # SQLAlchemy
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 # Firebase
@@ -28,46 +29,74 @@ async def google_login(
     payload: OAuthSchema,
     db: Session = Depends(get_db),
 ):
-    print(payload)
-
+    # 1. Verify Firebase ID token
     try:
         decoded_token = firebase_auth.verify_id_token(payload.id_token)
     except Exception as e:
-        print(e)
-
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Firebase ID token",
         )
 
-    print("==============")
+    uid = decoded_token.get("uid")
+    email = decoded_token.get("email")
+    name = decoded_token.get("name", "")
 
-    print(decoded_token)
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email not provided by Google account",
+        )
 
-    # uid = decoded_token.get("uid")
-    # email = decoded_token.get("email")
-    # name = decoded_token.get("name", "")
+    name_parts = name.split(" ") if name else ["", ""]
+    first_name = name_parts[0]
+    last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-    # if not email:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Email not provided by Google account",
-    #     )
+    user = (
+        db.query(User)
+        .filter(
+            or_(
+                and_(
+                    User.oauth_id == uid,
+                    User.oauth_provider == "google",
+                ),
+                User.email == email,
+            )
+        )
+        .first()
+    )
 
-    # name_parts = name.split(" ") if name else ["", ""]
-    # first_name = name_parts[0]
-    # last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+    if not user:
+        user = User(
+            email=email,
+            password=None,
+            first_name=first_name,
+            last_name=last_name,
+            is_confirmed=True,
+            is_active=True,
+            oauth_provider="google",
+            oauth_id=uid,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    # 3. Find existing user by (oauth_id + provider) OR email
-    # user = db.query(User).filter((User.email == email) | ((User.oauth_id == uid) & (User.oauth_provider == "google"))).first()
+    elif not user.oauth_provider:
+        user.oauth_provider = "google"
+        user.oauth_id = uid
+        user.is_confirmed = True
+        db.commit()
+        db.refresh(user)
 
-    # If user doesn't exist -> Create User
-    # If user exists but no oauth_provider -> Link Account (update oauth_provider="google", oauth_id=uid)
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive",
+        )
 
-    # 4. Generate your internal JWT Access Token
-    # access_token = create_access_token(data={"sub": str(user.id)})
+    access_token = create_token(user.id)
 
     return TokenSchema(
-        access_token="",
+        access_token=access_token,
         token_type="bearer",
     )
