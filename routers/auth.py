@@ -9,7 +9,7 @@ from dependencies.database import get_db  # Get DB
 from security.password import hash_password, verify_password  # Password
 from security.token import create_token  # Token
 from schemas.auth import SigninSchema, SignupSchema, TokenSchema  # Schemas
-from models import User
+from models import User  # Models
 
 # Router
 router = APIRouter(
