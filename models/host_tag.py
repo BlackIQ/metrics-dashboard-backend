@@ -22,13 +22,3 @@ class HostTag(BaseModel):
         ForeignKey("tags.id"),
         primary_key=True,
     )
-
-    # Relationships
-    host: Mapped["Host"] = relationship(
-        "Host",
-        back_populates="tags",
-    )
-    tag: Mapped["Tag"] = relationship(
-        "Tag",
-        back_populates="hosts",
-    )
