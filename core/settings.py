@@ -1,6 +1,11 @@
 # Pydantic Settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Path
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+
 
 # Class Settings
 class Settings(BaseSettings):
@@ -15,6 +20,9 @@ class Settings(BaseSettings):
 
     # Sentry
     sentry_dsn: str = ""
+
+    # Firebase
+    firebase_cerds: str = f"{ROOT_DIR}/openhubble-cloud-firebase.json"
 
     # Config Model
     model_config = SettingsConfigDict(env_file=".env")
