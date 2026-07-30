@@ -71,7 +71,8 @@ class Host(BaseModel):
         "Group",
         back_populates="hosts",
     )
-    tags: Mapped[list["HostTag"]] = relationship(
-        "HostTag",
-        back_populates="host",
+    tags: Mapped[list["Tag"]] = relationship(
+        "Tag",
+        secondary="host_tags",
+        back_populates="hosts",
     )
