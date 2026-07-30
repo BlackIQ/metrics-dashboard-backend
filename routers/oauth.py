@@ -11,13 +11,3 @@ router = APIRouter(
 @router.post("/google")
 async def google():
     pass
-
-
-@router.post("/microsoft")
-async def microsoft():
-    pass
-
-
-@router.post("/facebook")
-async def facebook():
-    pass
