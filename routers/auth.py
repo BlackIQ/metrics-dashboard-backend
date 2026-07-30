@@ -68,7 +68,7 @@ async def signin(
 ):
     user = db.query(User).where(User.email == data.email).first()
 
-    if user is None:
+    if user is None or user.password is None:
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password",
