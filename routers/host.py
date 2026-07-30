@@ -103,10 +103,10 @@ async def create_host(
         .all()
     )
 
-    data = host_data.model_dump(exclude=["ipv4", "tag_ids"])
+    create_data = host_data.model_dump(exclude=["ipv4", "tag_ids"])
 
     db_host = Host(
-        **data,
+        **create_data,
         ipv4=str(host_data.ipv4),
         user_id=user.id,
     )
@@ -143,13 +143,44 @@ async def update_host(
             detail="Host not found",
         )
 
-    if db_host.user_id != user.id:
-        raise HTTPException(
-            status_code=404,
-            detail="This host is not yours",
-        )
+    update_data = host_data.model_dump(exclude_unset=True)
 
-    for key, value in host_data.model_dump(exclude_unset=True).items():
+    if "group_id" in update_data and update_data["group_id"] is not None:
+        db_group = (
+            db.query(Group)
+            .where(
+                Group.id == update_data["group_id"],
+                Group.user_id == user.id,
+                Group.deleted_at == None,
+            )
+            .one_or_none()
+        )
+        if not db_group:
+            raise HTTPException(
+                status_code=404,
+                detail="Group not found",
+            )
+
+    if "tag_ids" in update_data:
+        tag_ids = update_data.pop("tag_ids")
+        if tag_ids is not None:
+            db_tags = (
+                db.query(Tag)
+                .where(
+                    Tag.id.in_(tag_ids),
+                    Tag.user_id == user.id,
+                    Tag.deleted_at == None,
+                )
+                .all()
+            )
+            db_host.tags = db_tags
+        else:
+            db_host.tags = []
+
+    if "ipv4" in update_data and update_data["ipv4"] is not None:
+        db_host.ipv4 = str(update_data.pop("ipv4"))
+
+    for key, value in update_data.items():
         setattr(db_host, key, value)
 
     db.commit()
