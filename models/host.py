@@ -56,9 +56,22 @@ class Host(BaseModel):
         index=True,
         nullable=False,
     )
+    group_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("groups.id"),
+        index=True,
+        nullable=False,
+    )
 
     # Relationships
     user: Mapped["User"] = relationship(
         "User",
         back_populates="hosts",
+    )
+    group: Mapped["Group"] = relationship(
+        "Group",
+        back_populates="hosts",
+    )
+    tags: Mapped[list["HostTag"]] = relationship(
+        "HostTag",
+        back_populates="host",
     )
