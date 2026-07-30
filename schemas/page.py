@@ -6,19 +6,19 @@ from uuid import UUID
 from base import BaseSchema  # Base
 
 
-# Page Schema
+# Create Page
 class PageCreate(BaseSchema):
     name: str
     description: str
 
 
-# Page profile
+# Update Page
 class PageUpdate(BaseSchema):
     name: str | None = None
     description: str | None = None
 
 
-# Page email
+# Read Page
 class PageRead(PageCreate):
     id: UUID
 

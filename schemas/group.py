@@ -6,19 +6,19 @@ from uuid import UUID
 from base import BaseSchema  # Base
 
 
-# Group Schema
+# Create Group
 class GroupCreate(BaseSchema):
     name: str
     description: str
 
 
-# Group profile
+# Update Group
 class GroupUpdate(BaseSchema):
     name: str | None = None
     description: str | None = None
 
 
-# Group email
+# Read Group
 class GroupRead(GroupCreate):
     id: UUID
 

@@ -16,18 +16,18 @@ class UserProfileSchema(BaseSchema):
     updated_at: datetime
 
 
-# Change profile
+# Change Profile
 class ChangeProfileSchema(BaseSchema):
     first_name: str | None = None
     last_name: str | None = None
 
 
-# Change email
+# Change Email
 class ChangeEmailSchema(BaseSchema):
     email: str
 
 
-# Rest Password
+# Change Password
 class ChangePasswordSchema(BaseSchema):
     current_password: str
     new_password: str
