@@ -14,7 +14,7 @@ from uuid import UUID
 from dependencies.database import get_db  # Get DB
 from dependencies.token import get_current_user  # Get current user
 from schemas.host import HostCreate, HostUpdate, HostRead  # Schemas
-from models import User, Host
+from models import User, Host, Group, Tag  # Models
 
 # Router
 router = APIRouter(
@@ -77,9 +77,41 @@ async def create_host(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    data = host_data.model_dump(exclude=["ipv4"])
+    db_group = (
+        db.query(Group)
+        .where(
+            Group.id == host_data.group_id,
+            Group.user_id == user.id,
+            Group.deleted_at == None,
+        )
+        .one_or_none()
+    )
 
-    db_host = Host(**data, ipv4=str(host_data.ipv4), user_id=user.id)
+    if not db_group:
+        raise HTTPException(
+            status_code=404,
+            detail="Group not found",
+        )
+
+    db_tags = (
+        db.query(Tag)
+        .where(
+            Tag.id.in_(host_data.tag_ids),
+            Tag.user_id == user.id,
+            Tag.deleted_at == None,
+        )
+        .all()
+    )
+
+    data = host_data.model_dump(exclude=["ipv4", "tag_ids"])
+
+    db_host = Host(
+        **data,
+        ipv4=str(host_data.ipv4),
+        user_id=user.id,
+    )
+
+    db_host.tags = db_tags
 
     db.add(db_host)
     db.commit()
