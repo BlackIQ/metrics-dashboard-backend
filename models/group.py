@@ -39,7 +39,7 @@ class Group(BaseModel):
         "User",
         back_populates="groups",
     )
-    hosts: Mapped["Host"] = relationship(
+    hosts: Mapped[list["Host"]] = relationship(
         "Host",
         back_populates="group",
     )
