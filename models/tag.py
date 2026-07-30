@@ -39,3 +39,7 @@ class Tag(BaseModel):
         "User",
         back_populates="tags",
     )
+    hosts: Mapped[list["HostTag"]] = relationship(
+        "HostTag",
+        back_populates="tag",
+    )
