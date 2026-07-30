@@ -12,7 +12,7 @@ from schemas.tag import TagRead  # Schema for Tag
 from schemas.group import GroupRead  # Schema for Group
 
 
-# Host Schema
+# Create Host
 class HostCreate(BaseSchema):
     name: str
     description: str
@@ -30,7 +30,7 @@ class HostCreate(BaseSchema):
     tag_ids: list[UUID]
 
 
-# Host profile
+# Update Host
 class HostUpdate(BaseSchema):
     name: str | None = None
     description: str | None = None
@@ -48,7 +48,7 @@ class HostUpdate(BaseSchema):
     tag_ids: list[UUID] | None = None
 
 
-# Host read
+# Read Host
 class HostRead(BaseSchema):
     id: UUID
 

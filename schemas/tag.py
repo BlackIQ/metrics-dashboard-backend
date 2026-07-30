@@ -6,19 +6,19 @@ from uuid import UUID
 from base import BaseSchema  # Base
 
 
-# Tag Schema
+# Create Tag
 class TagCreate(BaseSchema):
     name: str
     description: str
 
 
-# Tag profile
+# Update Tag
 class TagUpdate(BaseSchema):
     name: str | None = None
     description: str | None = None
 
 
-# Tag email
+# Read Tag
 class TagRead(TagCreate):
     id: UUID
 
