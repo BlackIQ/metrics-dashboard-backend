@@ -24,8 +24,8 @@ class User(BaseModel):
         unique=True,
         nullable=False,
     )
-    password: Mapped[str] = mapped_column(
-        nullable=False,
+    password: Mapped[str | None] = mapped_column(
+        nullable=True,
     )
     first_name: Mapped[str] = mapped_column(
         nullable=True,
@@ -38,6 +38,13 @@ class User(BaseModel):
     )
     is_active: Mapped[bool] = mapped_column(
         nullable=False,
+    )
+    oauth_provider: Mapped[str | None] = mapped_column(
+        nullable=True,
+    )
+    oauth_id: Mapped[str | None] = mapped_column(
+        nullable=True,
+        index=True,
     )
 
     # Relationships
