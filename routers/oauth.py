@@ -1,5 +1,5 @@
 # FastAPI
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 
 # SQLAlchemy
 from sqlalchemy import and_, or_
@@ -15,6 +15,11 @@ from security.token import create_token  # Token
 from schemas.oauth import OAuthSchema  # Schemas
 from schemas.common import TokenSchema  # Schema
 from models import User  # Models
+from utils.mail import send_email, MailSender  # Email
+from utils.mail_templates import (
+    get_signin_notification_email,
+    get_welcome_email,
+)  # Mail templates
 
 # Router
 router = APIRouter(
@@ -26,11 +31,12 @@ router = APIRouter(
 @router.post("/google", response_model=TokenSchema)
 async def google_login(
     payload: OAuthSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     try:
         decoded_token = firebase_auth.verify_id_token(payload.id_token)
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Firebase ID token",
@@ -64,7 +70,10 @@ async def google_login(
         .first()
     )
 
+    is_new_user = False
+
     if not user:
+        is_new_user = True
         user = User(
             email=email,
             password=None,
@@ -94,6 +103,23 @@ async def google_login(
             detail="Account is inactive",
         )
 
+    if is_new_user:
+        background_tasks.add_task(
+            send_email,
+            sender=MailSender.INFO,
+            to=user.email,
+            subject="Welcome to OpenHubble!",
+            content=get_welcome_email(),
+        )
+    else:
+        background_tasks.add_task(
+            send_email,
+            sender=MailSender.SECURITY,
+            to=user.email,
+            subject="Security Alert: New Sign-in to OpenHubble",
+            content=get_signin_notification_email(),
+        )
+
     access_token = create_token(user.id)
 
     return TokenSchema(
@@ -105,11 +131,12 @@ async def google_login(
 @router.post("/facebook", response_model=TokenSchema)
 async def facebook_login(
     payload: OAuthSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     try:
         decoded_token = firebase_auth.verify_id_token(payload.id_token)
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Firebase ID token",
@@ -143,7 +170,10 @@ async def facebook_login(
         .first()
     )
 
+    is_new_user = False
+
     if not user:
+        is_new_user = True
         user = User(
             email=email,
             password=None,
@@ -173,6 +203,23 @@ async def facebook_login(
             detail="Account is inactive",
         )
 
+    if is_new_user:
+        background_tasks.add_task(
+            send_email,
+            sender=MailSender.INFO,
+            to=user.email,
+            subject="Welcome to OpenHubble!",
+            content=get_welcome_email(),
+        )
+    else:
+        background_tasks.add_task(
+            send_email,
+            sender=MailSender.SECURITY,
+            to=user.email,
+            subject="Security Alert: New Sign-in to OpenHubble",
+            content=get_signin_notification_email(),
+        )
+
     access_token = create_token(user.id)
 
     return TokenSchema(
@@ -184,11 +231,12 @@ async def facebook_login(
 @router.post("/github", response_model=TokenSchema)
 async def github_login(
     payload: OAuthSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     try:
         decoded_token = firebase_auth.verify_id_token(payload.id_token)
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Firebase ID token",
@@ -222,7 +270,10 @@ async def github_login(
         .first()
     )
 
+    is_new_user = False
+
     if not user:
+        is_new_user = True
         user = User(
             email=email,
             password=None,
@@ -250,6 +301,23 @@ async def github_login(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is inactive",
+        )
+
+    if is_new_user:
+        background_tasks.add_task(
+            send_email,
+            sender=MailSender.INFO,
+            to=user.email,
+            subject="Welcome to OpenHubble!",
+            content=get_welcome_email(),
+        )
+    else:
+        background_tasks.add_task(
+            send_email,
+            sender=MailSender.SECURITY,
+            to=user.email,
+            subject="Security Alert: New Sign-in to OpenHubble",
+            content=get_signin_notification_email(),
         )
 
     access_token = create_token(user.id)
