@@ -31,7 +31,11 @@ router = APIRouter(
 )
 
 
-@router.post("/signup", response_model=MessageSchema)
+@router.post(
+    "/signup",
+    response_model=MessageSchema,
+    status_code=status.HTTP_201_CREATED,
+)
 async def signup(
     data: SignupSchema,
     db: Session = Depends(get_db),
@@ -56,8 +60,10 @@ async def signup(
     db.commit()
 
     token = create_confirmation_token(user.email)
-    confirmation_url = f"http://localhost:8000/auth/confirm-email?token={token}"
-    print(f"\n[EMAIL SIMULATION] {user.email}:\n{confirmation_url}\n")
+    confirmation_url = f"http://localhost:3000/auth?token={token}"
+    print(
+        f"\n[EMAIL SIMULATION] Confirmation Link for {user.email}:\n{confirmation_url}\n"
+    )
 
     return MessageSchema(
         message="Registration successful. Please check your email to confirm your account."
@@ -127,7 +133,6 @@ async def confirm_email(
 
     user.is_confirmed = True
     user.is_active = True
-
     db.commit()
 
     return MessageSchema(
@@ -156,9 +161,9 @@ async def resend_confirmation(
         )
 
     token = create_confirmation_token(user.email)
-    confirmation_url = f"http://localhost:8000/auth/confirm-email?token={token}"
+    confirmation_url = f"http://localhost:3000/auth?token={token}"
     print(
-        f"\n[RESEND EMAIL SIMULATION] Confirmation URL for {user.email}:\n{confirmation_url}\n"
+        f"\n[RESEND EMAIL SIMULATION] Confirmation Link for {user.email}:\n{confirmation_url}\n"
     )
 
     return generic_msg
