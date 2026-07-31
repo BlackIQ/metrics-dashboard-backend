@@ -11,11 +11,15 @@ from security.token import (
     create_token,
     create_confirmation_token,
     verify_confirmation_token,
+    create_reset_password_token,
+    verify_reset_password_token,
 )  # Token
 from schemas.auth import (
     SigninSchema,
     SignupSchema,
     ResendConfirmationSchema,
+    ForgotPasswordSchema,
+    ResetPasswordSchema,
 )  # Schemas
 from schemas.common import TokenSchema, MessageSchema  # Schema
 from models import User  # Models
@@ -157,4 +161,58 @@ async def signin(
     return TokenSchema(
         access_token=access_token,
         token_type="bearer",
+    )
+
+
+@router.post("/forgot-password", response_model=MessageSchema)
+async def forgot_password(
+    data: ForgotPasswordSchema,
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).where(User.email == data.email).first()
+
+    generic_msg = MessageSchema(
+        message="If this email is registered, password reset instructions have been sent."
+    )
+
+    if not user:
+        return generic_msg
+
+    token = create_reset_password_token(user.email)
+    reset_url = f"http://localhost:3000/auth?reset_token={token}"
+    print(f"\n[RESET PASSWORD SIMULATION] Reset Link for {user.email}:\n{reset_url}\n")
+
+    return generic_msg
+
+
+@router.post("/reset-password", response_model=MessageSchema)
+async def reset_password(
+    data: ResetPasswordSchema,
+    db: Session = Depends(get_db),
+):
+    if data.new_password != data.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Passwords do not match.",
+        )
+
+    email = verify_reset_password_token(data.token)
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token.",
+        )
+
+    user = db.query(User).where(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    user.password = hash_password(data.new_password)
+    db.commit()
+
+    return MessageSchema(
+        message="Password has been reset successfully. Please sign in with your new password."
     )
