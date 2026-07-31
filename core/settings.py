@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     email_username: str = ""
     email_password: str = ""
 
+    # Frontend
+    frontend_url: str = ""
+
     # Config Model
     model_config = SettingsConfigDict(env_file=".env")
 
