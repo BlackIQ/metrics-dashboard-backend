@@ -12,17 +12,22 @@ class SigninSchema(BaseSchema):
 class SignupSchema(BaseSchema):
     email: str
     password: str
-    confirm_password: str
     first_name: str | None = None
     last_name: str | None = None
 
 
-# Token Schema
-class TokenSchema(BaseSchema):
-    access_token: str
-    token_type: str
+# Resend Confirmation Schema
+class ResendConfirmationSchema(BaseSchema):
+    email: str
 
 
-# TODO: Reset Password
+# Reset Password Request (Forgot Password)
+class ForgotPasswordSchema(BaseSchema):
+    email: str
 
-# TODO: Forget password
+
+# Reset Password Confirmation
+class ResetPasswordSchema(BaseSchema):
+    token: str
+    new_password: str
+    confirm_password: str
