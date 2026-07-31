@@ -14,7 +14,7 @@ from uuid import UUID
 from dependencies.database import get_db  # Get DB
 from dependencies.token import get_current_user  # Get current user
 from schemas.page import PageCreate, PageUpdate, PageRead  # Schemas
-from models import User, Page
+from models import User, Page  # Models
 
 # Router
 router = APIRouter(

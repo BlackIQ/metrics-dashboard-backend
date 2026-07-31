@@ -14,7 +14,7 @@ from uuid import UUID
 from dependencies.database import get_db  # Get DB
 from dependencies.token import get_current_user  # Get current user
 from schemas.tag import TagCreate, TagUpdate, TagRead  # Schemas
-from models import User, Tag
+from models import User, Tag  # Models
 
 # Router
 router = APIRouter(
