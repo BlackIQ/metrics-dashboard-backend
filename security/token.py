@@ -50,3 +50,27 @@ def verify_confirmation_token(token: str) -> str | None:
         return payload.get("sub")
     except (jwt.PyJWTError, KeyError):
         return None
+
+
+def create_reset_password_token(email: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    payload = {
+        "sub": email,
+        "type": "reset_password",
+        "exp": expire,
+    }
+
+    return jwt.encode(payload=payload, key=SECRET, algorithm=ALGORITHM)
+
+
+def verify_reset_password_token(token: str) -> str | None:
+    try:
+        payload = jwt.decode(token, key=SECRET, algorithms=[ALGORITHM])
+
+        if payload.get("type") != "reset_password":
+            return None
+
+        return payload.get("sub")
+    except (jwt.PyJWTError, KeyError):
+        return None
