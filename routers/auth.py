@@ -64,6 +64,45 @@ async def signup(
     )
 
 
+@router.post("/signin", response_model=TokenSchema)
+async def signin(
+    data: SigninSchema,
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).where(User.email == data.email).first()
+
+    if user is None or user.password is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    if not verify_password(data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    if not user.is_confirmed:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is not confirmed. Please check your email.",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is inactive.",
+        )
+
+    access_token = create_token(user.id)
+
+    return TokenSchema(
+        access_token=access_token,
+        token_type="bearer",
+    )
+
+
 @router.get("/confirm-email", response_model=MessageSchema)
 async def confirm_email(
     token: str,
@@ -123,45 +162,6 @@ async def resend_confirmation(
     )
 
     return generic_msg
-
-
-@router.post("/signin", response_model=TokenSchema)
-async def signin(
-    data: SigninSchema,
-    db: Session = Depends(get_db),
-):
-    user = db.query(User).where(User.email == data.email).first()
-
-    if user is None or user.password is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    if not verify_password(data.password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    if not user.is_confirmed:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is not confirmed. Please check your email.",
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is inactive.",
-        )
-
-    access_token = create_token(user.id)
-
-    return TokenSchema(
-        access_token=access_token,
-        token_type="bearer",
-    )
 
 
 @router.post("/forgot-password", response_model=MessageSchema)

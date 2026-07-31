@@ -21,12 +21,12 @@ class ResendConfirmationSchema(BaseSchema):
     email: str
 
 
-# Reset Password Request (Forgot Password)
+# Reset Password Request Schema
 class ForgotPasswordSchema(BaseSchema):
     email: str
 
 
-# Reset Password Confirmation
+# Reset Password Confirmation Schema
 class ResetPasswordSchema(BaseSchema):
     token: str
     new_password: str
