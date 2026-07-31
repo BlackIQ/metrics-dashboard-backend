@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     # Firebase
     firebase_credentials: str = ""
 
+    # Resend
+    resend_apikey: str = ""
+
+    # Email
+    email_endpoint: str = ""
+    email_port: int = 0
+    email_username: str = ""
+    email_password: str = ""
+
     # Config Model
     model_config = SettingsConfigDict(env_file=".env")
 

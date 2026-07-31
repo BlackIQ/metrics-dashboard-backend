@@ -12,8 +12,8 @@ from firebase_admin import auth as firebase_auth
 import core.firebase  # Firebase
 from dependencies.database import get_db  # Get DB
 from security.token import create_token  # Token
-from schemas.auth import TokenSchema  # Schema
 from schemas.oauth import OAuthSchema  # Schemas
+from schemas.common import TokenSchema  # Schema
 from models import User  # Models
 
 # Router
