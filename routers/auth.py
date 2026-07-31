@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
 # Application
+from core.settings import settings  # Settings
 from dependencies.database import get_db  # Get DB
 from security.password import hash_password, verify_password  # Password
 from security.token import (
@@ -65,7 +66,7 @@ async def signup(
     db.commit()
 
     token = create_confirmation_token(user.email)
-    confirmation_url = f"http://localhost:3000/auth?token={token}"
+    confirmation_url = f"{settings.frontend_url}/auth?token={token}"
 
     background_tasks.add_task(
         send_email,
@@ -190,7 +191,7 @@ async def resend_confirmation(
         )
 
     token = create_confirmation_token(user.email)
-    confirmation_url = f"http://localhost:3000/auth?token={token}"
+    confirmation_url = f"{settings.frontend_url}/auth?token={token}"
 
     background_tasks.add_task(
         send_email,
@@ -219,7 +220,7 @@ async def forgot_password(
         return generic_msg
 
     token = create_reset_password_token(user.email)
-    reset_url = f"http://localhost:3000/auth?reset_token={token}"
+    reset_url = f"{settings.frontend_url}/auth?reset_token={token}"
 
     background_tasks.add_task(
         send_email,
