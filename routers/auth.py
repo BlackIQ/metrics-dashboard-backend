@@ -1,5 +1,5 @@
 # FastAPI
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 
 # SQLAlchemy
 from sqlalchemy.orm import Session
@@ -23,6 +23,14 @@ from schemas.auth import (
 )  # Schemas
 from schemas.common import TokenSchema, MessageSchema  # Schema
 from models import User  # Models
+from utils.mail import send_email, MailSender  # Email
+from utils.mail_templates import (
+    get_signup_email,
+    get_signin_notification_email,
+    get_welcome_email,
+    get_forgot_password_email,
+    get_password_changed_email,
+)  # Mail templates
 
 # Router
 router = APIRouter(
@@ -31,13 +39,10 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/signup",
-    response_model=MessageSchema,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/signup", response_model=MessageSchema)
 async def signup(
     data: SignupSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     email_exists = db.query(User).where(User.email == data.email).first()
@@ -61,8 +66,13 @@ async def signup(
 
     token = create_confirmation_token(user.email)
     confirmation_url = f"http://localhost:3000/auth?token={token}"
-    print(
-        f"\n[EMAIL SIMULATION] Confirmation Link for {user.email}:\n{confirmation_url}\n"
+
+    background_tasks.add_task(
+        send_email,
+        sender=MailSender.INFO,
+        to=user.email,
+        subject="Confirm your OpenHubble account",
+        content=get_signup_email(confirmation_url),
     )
 
     return MessageSchema(
@@ -73,6 +83,7 @@ async def signup(
 @router.post("/signin", response_model=TokenSchema)
 async def signin(
     data: SigninSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     user = db.query(User).where(User.email == data.email).first()
@@ -103,6 +114,14 @@ async def signin(
 
     access_token = create_token(user.id)
 
+    background_tasks.add_task(
+        send_email,
+        sender=MailSender.SECURITY,
+        to=user.email,
+        subject="Security Alert: New Sign-in to OpenHubble",
+        content=get_signin_notification_email(),
+    )
+
     return TokenSchema(
         access_token=access_token,
         token_type="bearer",
@@ -112,6 +131,7 @@ async def signin(
 @router.get("/confirm-email", response_model=MessageSchema)
 async def confirm_email(
     token: str,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     email = verify_confirmation_token(token)
@@ -135,6 +155,14 @@ async def confirm_email(
     user.is_active = True
     db.commit()
 
+    background_tasks.add_task(
+        send_email,
+        sender=MailSender.INFO,
+        to=user.email,
+        subject="Welcome to OpenHubble!",
+        content=get_welcome_email(),
+    )
+
     return MessageSchema(
         message="Your email has been confirmed and account activated. Please sign in."
     )
@@ -143,6 +171,7 @@ async def confirm_email(
 @router.post("/resend-confirmation", response_model=MessageSchema)
 async def resend_confirmation(
     data: ResendConfirmationSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     user = db.query(User).where(User.email == data.email).first()
@@ -162,8 +191,13 @@ async def resend_confirmation(
 
     token = create_confirmation_token(user.email)
     confirmation_url = f"http://localhost:3000/auth?token={token}"
-    print(
-        f"\n[RESEND EMAIL SIMULATION] Confirmation Link for {user.email}:\n{confirmation_url}\n"
+
+    background_tasks.add_task(
+        send_email,
+        sender=MailSender.INFO,
+        to=user.email,
+        subject="Confirm your OpenHubble account",
+        content=get_signup_email(confirmation_url),
     )
 
     return generic_msg
@@ -172,6 +206,7 @@ async def resend_confirmation(
 @router.post("/forgot-password", response_model=MessageSchema)
 async def forgot_password(
     data: ForgotPasswordSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     user = db.query(User).where(User.email == data.email).first()
@@ -185,7 +220,14 @@ async def forgot_password(
 
     token = create_reset_password_token(user.email)
     reset_url = f"http://localhost:3000/auth?reset_token={token}"
-    print(f"\n[RESET PASSWORD SIMULATION] Reset Link for {user.email}:\n{reset_url}\n")
+
+    background_tasks.add_task(
+        send_email,
+        sender=MailSender.SECURITY,
+        to=user.email,
+        subject="Reset your OpenHubble Password",
+        content=get_forgot_password_email(reset_url),
+    )
 
     return generic_msg
 
@@ -193,6 +235,7 @@ async def forgot_password(
 @router.post("/reset-password", response_model=MessageSchema)
 async def reset_password(
     data: ResetPasswordSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     if data.new_password != data.confirm_password:
@@ -217,6 +260,14 @@ async def reset_password(
 
     user.password = hash_password(data.new_password)
     db.commit()
+
+    background_tasks.add_task(
+        send_email,
+        sender=MailSender.SECURITY,
+        to=user.email,
+        subject="Your OpenHubble password has been changed",
+        content=get_password_changed_email(),
+    )
 
     return MessageSchema(
         message="Password has been reset successfully. Please sign in with your new password."
