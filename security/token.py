@@ -20,12 +20,10 @@ def create_token(user_id: uuid.UUID) -> str:
 
     payload = {
         "sub": str(user_id),
-        "exp": expire,
+        "exp": int(expire.timestamp()),
     }
 
-    jwt_token = jwt.encode(payload=payload, key=SECRET, algorithm=ALGORITHM)
-
-    return jwt_token
+    return jwt.encode(payload=payload, key=SECRET, algorithm=ALGORITHM)
 
 
 def create_confirmation_token(email: str) -> str:
