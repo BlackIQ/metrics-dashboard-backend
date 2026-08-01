@@ -58,7 +58,10 @@ async def change_password(
         raise HTTPException(status_code=409, detail="New passwords are not same")
 
     # Check if current password is right or no
-    if not verify_password(data.current_password, user.password):
+    if user.password is None or not verify_password(
+        data.current_password,
+        user.password,
+    ):
         raise HTTPException(status_code=409, detail="Current password is wrong")
 
     # Now confirm is equal to new and user password is same
