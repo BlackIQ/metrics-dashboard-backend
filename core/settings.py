@@ -1,21 +1,20 @@
 # Pydantic Settings
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Path
+# Pathlib
 from pathlib import Path
 
 # JSON
 import json
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent  # Root directory
 
 
 # Class Settings
 class Settings(BaseSettings):
-    # Database - PostgreSQL
-    postgresql_url: str = ""
-
-    # Database - TimescaleDB
+    # Database
+    postgresql_url: str
 
     # Security
     secret: str = ""
@@ -36,13 +35,44 @@ class Settings(BaseSettings):
     email_username: str = ""
     email_password: str = ""
 
-    # Frontend
     frontend_url: str = ""
 
-    # Config Model
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Get firebase cerds
+    # Validate: postgresql_url
+    @field_validator("postgresql_url")
+    @classmethod
+    def validate_postgresql_url(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("postgresql_url must be set")
+        if not value.startswith(
+            ("postgresql://", "postgresql+psycopg2://", "postgresql+psycopg://")
+        ):
+            raise ValueError(
+                "postgresql_url must be a valid PostgreSQL connection string"
+            )
+        return value
+
+    # Validator: secret
+    @field_validator("secret")
+    @classmethod
+    def validate_secret(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 32:
+            raise ValueError("secret must be at least 32 characters long")
+        return value
+
+    # Validator: algorithm
+    @field_validator("algorithm")
+    @classmethod
+    def validate_algorithm(cls, value: str) -> str:
+        allowed_algorithms = {"HS256", "HS384", "HS512"}
+        value = value.strip()
+        if value not in allowed_algorithms:
+            raise ValueError(f"algorithm must be one of {sorted(allowed_algorithms)}")
+        return value
+
     def get_firebase_credentials_dict(self) -> dict:
         raw_val = self.firebase_credentials.strip()
 
