@@ -2,16 +2,15 @@
 import re
 
 # Pydantic
-from pydantic import ConfigDict, field_validator
+from pydantic import field_validator
 
 # Application
 from base import BaseSchema  # Base
 from security.password import validate_password_strength  # Password
 
 
-# Base Auth Schema
-class BaseAuthSchema(BaseSchema):
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+class BaseEmailSchema(BaseSchema):
+    email: str
 
     @field_validator("email", mode="before")
     @classmethod
@@ -26,6 +25,11 @@ class BaseAuthSchema(BaseSchema):
 
         return value
 
+
+# Base Auth Schema
+class BasePasswordSchema(BaseSchema):
+    password: str
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
@@ -38,31 +42,34 @@ class BaseAuthSchema(BaseSchema):
 
 
 # Signin Schema
-class SigninSchema(BaseAuthSchema):
-    email: str
-    password: str
+class SigninSchema(BaseEmailSchema, BasePasswordSchema):
+    # email: str
+    # password: str
+
+    pass
 
 
 # Signup Schema
-class SignupSchema(BaseAuthSchema):
-    email: str
-    password: str
+class SignupSchema(BaseEmailSchema, BasePasswordSchema):
+    # email: str
+    # password: str
+
     first_name: str | None = None
     last_name: str | None = None
 
 
 # Resend Confirmation Schema
-class ResendConfirmationSchema(BaseAuthSchema):
+class ResendConfirmationSchema(BaseEmailSchema):
     email: str
 
 
 # Reset Password Request Schema
-class ForgotPasswordSchema(BaseAuthSchema):
+class ForgotPasswordSchema(BaseEmailSchema):
     email: str
 
 
 # Reset Password Confirmation Schema
-class ResetPasswordSchema(BaseAuthSchema):
+class ResetPasswordSchema(BaseSchema):
     token: str
     new_password: str
     confirm_password: str
