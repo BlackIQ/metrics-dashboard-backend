@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 import jwt
 from jwt.exceptions import PyJWTError
 
+# UUID
+from uuid import UUID
+
 # Application
 from core.settings import settings  # Settings
 from dependencies.database import get_db  # Depenencies
@@ -34,21 +37,26 @@ def get_current_user(
     token: str = Depends(oauth2_schema), db: Session = Depends(get_db)
 ):
     try:
-        # Decode JWT
-        payload = jwt.decode(jwt=token, key=SECRET, algorithms=ALGORITHM)
+        payload = jwt.decode(
+            jwt=token,
+            key=SECRET,
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "sub"]},
+        )
     except PyJWTError:
         raise credentials_exception
 
-    # User ID from payload
-    user_id: int | None = payload.get("sub")
-
-    if user_id == None:
+    user_id = payload.get("sub")
+    if not user_id:
         raise credentials_exception
 
-    # Get User from DB
-    user = db.get(User, user_id)
+    try:
+        parsed_user_id = UUID(str(user_id))
+    except ValueError:
+        raise credentials_exception
 
-    # User is not found
+    user = db.query(User).filter(User.id == parsed_user_id).one_or_none()
+
     if user is None:
         raise credentials_exception
 

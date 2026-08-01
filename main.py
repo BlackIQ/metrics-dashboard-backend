@@ -7,7 +7,7 @@ import sentry_sdk
 
 # Application
 from core.settings import settings  # Settings
-from routers import auth, oauth, host, group, page, tag, user
+from routers import auth, oauth, host, group, page, tag, user  # Routers
 
 # Init Sentry
 sentry_sdk.init(
@@ -41,13 +41,16 @@ app = FastAPI(
     ],
 )
 
-# Cors
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "https://metrics.openhubble.com",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-KEY"],
 )
 
 

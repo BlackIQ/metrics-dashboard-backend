@@ -1,5 +1,5 @@
 # FastAPI
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 
 # SQLAlchemy
 from sqlalchemy.orm import Session
@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from core.settings import settings  # Settings
 from dependencies.database import get_db  # Get DB
 from security.password import hash_password, verify_password  # Password
+
+from security.rate_limit import RateLimiter  # Rate limiter
 from security.token import (
     create_token,
     create_confirmation_token,
@@ -33,19 +35,40 @@ from utils.mail_templates import (
     get_password_changed_email,
 )  # Mail templates
 
-# Router
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
 )
 
+signup_limiter = RateLimiter(limit=3, window_seconds=60)
+signin_limiter = RateLimiter(limit=5, window_seconds=60)
+resend_limiter = RateLimiter(limit=3, window_seconds=60)
+forgot_password_limiter = RateLimiter(limit=3, window_seconds=60)
+reset_password_limiter = RateLimiter(limit=5, window_seconds=60)
+
+
+def _rate_limit_key(request: Request, email: str | None = None) -> str:
+    client_host = request.client.host if request.client else "unknown"
+
+    if email:
+        return f"{client_host}:{email.lower()}"
+
+    return client_host
+
 
 @router.post("/signup", response_model=MessageSchema)
 async def signup(
+    request: Request,
     data: SignupSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    if not signup_limiter.allow_request(_rate_limit_key(request, data.email)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many signup attempts. Please try again later.",
+        )
+
     email_exists = db.query(User).where(User.email == data.email).first()
     if email_exists:
         raise HTTPException(
@@ -83,10 +106,17 @@ async def signup(
 
 @router.post("/signin", response_model=TokenSchema)
 async def signin(
+    request: Request,
     data: SigninSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    if not signin_limiter.allow_request(_rate_limit_key(request, data.email)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many sign-in attempts. Please try again later.",
+        )
+
     user = db.query(User).where(User.email == data.email).first()
 
     if user is None or user.password is None:
@@ -171,10 +201,17 @@ async def confirm_email(
 
 @router.post("/resend-confirmation", response_model=MessageSchema)
 async def resend_confirmation(
+    request: Request,
     data: ResendConfirmationSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    if not resend_limiter.allow_request(_rate_limit_key(request, data.email)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many confirmation requests. Please try again later.",
+        )
+
     user = db.query(User).where(User.email == data.email).first()
 
     generic_msg = MessageSchema(
@@ -206,10 +243,17 @@ async def resend_confirmation(
 
 @router.post("/forgot-password", response_model=MessageSchema)
 async def forgot_password(
+    request: Request,
     data: ForgotPasswordSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    if not forgot_password_limiter.allow_request(_rate_limit_key(request, data.email)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many password reset attempts. Please try again later.",
+        )
+
     user = db.query(User).where(User.email == data.email).first()
 
     generic_msg = MessageSchema(
@@ -235,10 +279,17 @@ async def forgot_password(
 
 @router.post("/reset-password", response_model=MessageSchema)
 async def reset_password(
+    request: Request,
     data: ResetPasswordSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    if not reset_password_limiter.allow_request(_rate_limit_key(request, data.token)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many password reset attempts. Please try again later.",
+        )
+
     if data.new_password != data.confirm_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
