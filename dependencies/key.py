@@ -1,3 +1,6 @@
+# HMAC
+import hmac
+
 # FastAPI
 from fastapi import status, Security, HTTPException
 from fastapi.security import APIKeyHeader
@@ -16,7 +19,7 @@ async def apikey(api_key: str = Security(apikey_schema)):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing API key"
         )
 
-    if api_key != settings.secret:
+    if not hmac.compare_digest(api_key, settings.secret):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
         )
